@@ -23,7 +23,7 @@ export default function Navbar() {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setShowProfile(false);
       }
-    };
+    }; 
     window.addEventListener("click", handleClickOutside);
     return () => window.removeEventListener("click", handleClickOutside);
   }, []);
@@ -114,14 +114,14 @@ export default function Navbar() {
 
               <div
                 className="dropdown-item"
-                onClick={() => navigate("/add-room")}
+                onClick={() => navigate("/add")}
               >
                 ➕ Add your room
               </div>
 
               <div
                 className="dropdown-item"
-                onClick={() => navigate("/added-rooms")}
+                onClick={() => navigate("/my-rooms")}
               >
                 📋 Added rooms
               </div>
