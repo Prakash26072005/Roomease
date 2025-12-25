@@ -1,82 +1,3 @@
-// import React, { useEffect, useState } from "react";
-// import { useNavigate } from "react-router-dom";
-
-// export default function MyRooms() {
-//   const [rooms, setRooms] = useState([]);
-//   const navigate = useNavigate();
-
-//   useEffect(() => {
-//     fetch("http://localhost:5000/api/rooms/my-rooms", {
-//       headers: {
-//         "Authorization": "Bearer " + localStorage.getItem("token"),
-//       },
-//     })
-//       .then(res => res.json())
-//       .then(data => {
-//         if (data.success) setRooms(data.rooms);
-//         else console.log(data);
-//       })
-//       .catch(err => console.log(err));
-//   }, []);
-
-//   const deleteRoom = async (id) => {
-//     const confirmDelete = window.confirm("Are you sure you want to delete this room?");
-//     if (!confirmDelete) return;
-
-//     const res = await fetch(`http://localhost:5000/api/rooms/delete/${id}`, {
-//       method: "DELETE",
-//       headers: {
-//         "Authorization": "Bearer " + localStorage.getItem("token"),
-//       },
-//     });
-
-//     const data = await res.json();
-
-//     if (data.success) {
-//       setRooms(rooms.filter(room => room._id !== id));
-//     } else {
-//       alert("Delete failed");
-//     }
-//   };
-
-//   return (
-//     <div style={{ padding: "20px" }}>
-//       <h2>My Added Rooms</h2>
-
-//       <div style={{
-//         display: "grid",
-//         gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-//         gap: "20px"
-//       }}>
-//         {rooms.map(room => (
-//           <div key={room._id} style={{
-//             border: "1px solid #ddd",
-//             padding: "10px",
-//             borderRadius: "10px"
-//           }}>
-//             <img 
-//               src={room.images?.[0] || "https://via.placeholder.com/300"} 
-//               alt="room" 
-//               style={{ width: "100%", height: "200px", objectFit: "cover" }}
-//             />
-
-//             <h3>{room.title}</h3>
-
-//             <button onClick={() => deleteRoom(room._id)} style={{ marginRight: "10px" }}>
-//               Delete
-//             </button>
-
-//             <button onClick={() => navigate(`/edit/${room._id}`)}>
-//               Edit
-//             </button>
-//           </div>
-//         ))}
-//       </div>
-//     </div>
-//   );
-// }
-
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -123,7 +44,7 @@ export default function MyRooms() {
     }
   };
 
-  const fallbackImage = "/fallback.jpg"; // change or remove if not needed
+  const fallbackImage = "/fallback.jpg";
 
   return (
     <div style={{ padding: "20px" }}>
@@ -154,7 +75,7 @@ export default function MyRooms() {
           >
             <div style={{ width: "100%", height: 200, overflow: "hidden", borderRadius: 8 }}>
               <img
-                src={(room.images && room.images.length > 0) ? room.images[0] : fallbackImage}
+                src={room.images?.[0]?.url || fallbackImage}
                 alt={room.title}
                 style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
               />
@@ -173,12 +94,13 @@ export default function MyRooms() {
                 }}
               >
                 Delete
+                +
               </button>
 
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  navigate(`/edit/${room._id}`); // match route you set in App.jsx
+                  navigate(`/edit/${room._id}`);
                 }}
               >
                 Edit

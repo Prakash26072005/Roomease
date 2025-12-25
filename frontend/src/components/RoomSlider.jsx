@@ -12,18 +12,22 @@ export default function RoomSlider({ images }) {
 
   return (
     <Slider {...settings}>
-      {images.map((img, i) => (
-        <div key={i}>
-          <img
-            src={img}
-            style={{
-              width: "100%",
-              height: "320px",
-              objectFit: "cover"
-            }}
-          />
-        </div>
-      ))}
+      {images.map((img, i) => {
+        const src = typeof img === "string" ? img : img.url;  // handle both
+
+        return (
+          <div key={i}>
+            <img
+              src={src}
+              style={{
+                width: "100%",
+                height: "320px",
+                objectFit: "cover",
+              }}
+            />
+          </div>
+        );
+      })}
     </Slider>
   );
 }

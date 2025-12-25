@@ -55,8 +55,15 @@ export default function Navbar() {
 <div className="nav-left">
   <img src={logo} alt="Logo" className="logo-img" />
   <h1 className="site-title">RoomEase</h1>
+  {/* Home button*/}
+        <button
+    className="home-btn"
+    onClick={() => navigate("/")}
+  >
+    Home
+  </button>
 </div>
-
+ 
       {/* Center Search Bar */}
       <form className="search-form" onSubmit={onSearch}>
         <input

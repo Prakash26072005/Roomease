@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-
+import {  useNavigate } from "react-router-dom";
 export default function AddRoom() {
   const [data, setData] = useState({
     title: "",
@@ -9,6 +9,7 @@ export default function AddRoom() {
   });
 
   const [images, setImages] = useState([]);
+    const navigate = useNavigate();
 
   const handleChange = (e) => {
     setData({ ...data, [e.target.name]: e.target.value });
@@ -45,6 +46,7 @@ export default function AddRoom() {
 
     if (result.success) {
       alert("Room added successfully!");
+        navigate("/my-rooms");
     }
   };
 

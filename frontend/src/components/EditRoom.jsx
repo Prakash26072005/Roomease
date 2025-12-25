@@ -197,7 +197,7 @@ export default function EditRoom() {
           )}
         </div>
 
-        <button type="submit" disabled={submitting}>
+        <button type="su  bmit" disabled={submitting}>
           {submitting ? "Updating..." : "Update Room"}
         </button>
       </form>

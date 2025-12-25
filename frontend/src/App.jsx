@@ -3,9 +3,10 @@ import Login from "./components/Login";
 import RoomsPage from "./components/RoomsPage";
 import AddRoom from "./components/AddRoom";
 import RoomDetails from "./components/RoomDetails";
-import Navbar from "./components/navbar";
+
 import MyRooms from "./components/MyRooms";
 import EditRoom from "./components/EditRoom";
+import Navbar from "./components/Navbar";
 
 export default function App() {
   return (

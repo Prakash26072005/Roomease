@@ -18,11 +18,13 @@ export default function RoomDetails() {
 
   return (
     <div>
-      <RoomSlider images={room.images} />
+      {/* Send only URLs to RoomSlider */}
+      <RoomSlider images={room.images.map(img => img.url)} />
 
       <h2>{room.title}</h2>
       <p>{room.location}</p>
       <p>{room.description}</p>
+        <p><strong>Owner:</strong> {room.owner?.name}</p>
       <h3>₹{room.price} / night</h3>
     </div>
   );

@@ -31,7 +31,7 @@ export default function RoomsPage() {
             boxShadow: "0 0 10px rgba(0,0,0,0.2)"
           }}>
             <img
-              src={room.images?.[0] || "https://via.placeholder.com/300"}
+              src={room.images?.[0]?.url || "https://via.placeholder.com/300"}
               style={{
                 width: "100%",
                 height: "200px",
@@ -41,7 +41,7 @@ export default function RoomsPage() {
             <div style={{ padding: "10px" }}>
               <h3>{room.title}</h3>
               <p>{room.location}</p>
-              <p><b>₹{room.price}</b> / night</p>
+              <p><b>₹{room.price}</b> / month</p>
             </div>
           </div>
         </Link>
@@ -49,9 +49,3 @@ export default function RoomsPage() {
     </div>
   );
 }
-
-
-
-
-
-
