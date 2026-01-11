@@ -2,19 +2,19 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Navbar.css";
 import logo from "../assets/RoomEase.png";
-
+import { getValidUser } from "../utils/auth";
 
 export default function Navbar() {
   const [query, setQuery] = useState("");
   const [showProfile, setShowProfile] = useState(false);
   const [user, setUser] = useState(null);
   const dropdownRef = useRef();
-  const navigate = useNavigate(); // ✅ React Router navigation
+  const navigate = useNavigate();
 
-  // Load user
+  // ✅ Load user safely (check token expiry)
   useEffect(() => {
-    const saved = localStorage.getItem("user");
-    if (saved) setUser(JSON.parse(saved));
+    const validUser = getValidUser();
+    setUser(validUser);
   }, []);
 
   // Close dropdown on outside click
@@ -23,21 +23,17 @@ export default function Navbar() {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setShowProfile(false);
       }
-    }; 
+    };
     window.addEventListener("click", handleClickOutside);
     return () => window.removeEventListener("click", handleClickOutside);
   }, []);
 
-  // ✅ Login / Logout using navigate()
-  const handleLoginLogout = () => {
-    if (user) {
-      localStorage.removeItem("user");
-      localStorage.removeItem("token");
-      setUser(null);
-      navigate("/login");   // 👈 Redirect to login
-    } else {
-      navigate("/login");
-    }
+  // Logout
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    setUser(null);
+    navigate("/");
   };
 
   const firstLetter = user?.name
@@ -50,21 +46,17 @@ export default function Navbar() {
 
   return (
     <nav className="navbar">
+      {/* Left Side */}
+      <div className="nav-left">
+        <img src={logo} alt="Logo" className="logo-img" />
+        <h1 className="site-title">RoomEase</h1>
 
-      {/* Left Side – Logo + Name */}
-<div className="nav-left">
-  <img src={logo} alt="Logo" className="logo-img" />
-  <h1 className="site-title">RoomEase</h1>
-  {/* Home button*/}
-        <button
-    className="home-btn"
-    onClick={() => navigate("/")}
-  >
-    Home
-  </button>
-</div>
- 
-      {/* Center Search Bar */}
+        <button className="home-btn" onClick={() => navigate("/")}>
+          Home
+        </button>
+      </div>
+
+      {/* Search */}
       <form className="search-form" onSubmit={onSearch}>
         <input
           className="search-input"
@@ -73,73 +65,59 @@ export default function Navbar() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-        <button type="submit" className="search-btn">Search</button>
+        <button type="submit" className="search-btn">
+          Search
+        </button>
       </form>
 
-      {/* Right Side Icons */}
+      {/* Right Side */}
       <div className="nav-right">
-
-        {/* ❤️ Liked Homes → /liked */}
-        <button
-          className="icon-btn"
-          title="Liked"
-          onClick={() => navigate("/liked")}
-        >
-          ❤️
-        </button>
-
-        {/* 💬 Chats → /chats */}
-        <button
-          className="icon-btn"
-          title="Chats"
-          onClick={() => navigate("/chats")}
-        >
-          💬
-        </button>
-
-        {/* 🏨 Booked Rooms → /bookings */}
-        <button
-          className="icon-btn"
-          title="Booked"
-          onClick={() => navigate("/bookings")}
-        >
-          🏨
-        </button>
+        <button className="icon-btn" onClick={() => navigate("/liked")}>❤️</button>
+        <button className="icon-btn" onClick={() => navigate("/chats")}>💬</button>
+        <button className="icon-btn" onClick={() => navigate("/bookings")}>🏨</button>
 
         {/* Profile */}
-        <div className="profile-box" ref={dropdownRef}>
-          <div
-            className="profile-circle"
-            onClick={() => setShowProfile(!showProfile)}
-          >
-            {firstLetter}
-          </div>
-
-          {showProfile && (
-            <div className="dropdown">
-              <div className="dropdown-header">{user?.name || "User"}</div>
-
-              <div
-                className="dropdown-item"
-                onClick={() => navigate("/add")}
-              >
-                ➕ Add your room
-              </div>
-
-              <div
-                className="dropdown-item"
-                onClick={() => navigate("/my-rooms")}
-              >
-                📋 Added rooms
-              </div>
+        {user && (
+          <div className="profile-box" ref={dropdownRef}>
+            <div
+              className="profile-circle"
+              onClick={() => setShowProfile(!showProfile)}
+            >
+              {firstLetter}
             </div>
-          )}
-        </div>
 
-        {/* Login/Logout */}
-        <button className="login-btn" onClick={handleLoginLogout}>
-          {user ? "Logout" : "Login"}
-        </button>
+            {showProfile && (
+              <div className="dropdown">
+                <div className="dropdown-header">{user.name}</div>
+
+                <div
+                  className="dropdown-item"
+                  onClick={() => navigate("/add")}
+                >
+                  ➕ Add your room
+                </div>
+
+                <div
+                  className="dropdown-item"
+                  onClick={() => navigate("/my-rooms")}
+                >
+                  📋 Added rooms
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Login / Logout */}
+        {user ? (
+          <button className="login-btn" onClick={handleLogout}>
+            Logout
+          </button>
+        ) : (
+          <button className="login-btn" onClick={() => navigate("/login")}>
+            Login
+          </button>
+        )}
       </div>
     </nav>
   );

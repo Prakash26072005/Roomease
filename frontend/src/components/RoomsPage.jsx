@@ -40,7 +40,7 @@ export default function RoomsPage() {
             />
             <div style={{ padding: "10px" }}>
               <h3>{room.title}</h3>
-              <p>{room.location}</p>
+              <p>{room.location.address}</p>
               <p><b>₹{room.price}</b> / month</p>
             </div>
           </div>

@@ -13,7 +13,7 @@ router.post(
   upload.array("images", 10),
   async (req, res) => {
     try {
-      const { title, description, price, location } = req.body;
+      const { title, description, price, address, lat, lng } = req.body;
 
  const images = req.files?.map((file) => ({
   url: file.path,
@@ -21,11 +21,15 @@ router.post(
 })) || [];
 
 
-     const room = new Room({
+    const room = new Room({
   title,
   description,
   price,
-  location,
+  location: {
+    address,
+    lat,
+    lng,
+  },
   images,
   owner: req.user._id,
 });
@@ -108,12 +112,14 @@ router.put(
 }
 
 
-      const { title, description, price, location } = req.body;
+const { title, description, price, address, lat, lng } = req.body;
 
       room.title = title;
       room.description = description;
       room.price = price;
-      room.location = location;
+      room.location.address = address;
+room.location.lat = lat;
+room.location.lng = lng;
      if (req.files.length > 0) {
   // delete old images first
   for (let img of room.images) {

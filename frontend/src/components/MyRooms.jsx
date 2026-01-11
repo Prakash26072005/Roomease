@@ -83,7 +83,7 @@ export default function MyRooms() {
 
             <div style={{ flex: 1 }}>
               <h3 style={{ margin: "8px 0" }}>{room.title}</h3>
-              <p style={{ margin: 0, color: "#555" }}>{room.location}</p>
+              <p style={{ margin: 0, color: "#555" }}>{room.location.address}</p>
             </div>
 
             <div style={{ display: "flex", gap: 10, marginTop: 8 }}>

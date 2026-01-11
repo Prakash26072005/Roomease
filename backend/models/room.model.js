@@ -20,11 +20,21 @@ const roomSchema = new mongoose.Schema(
       min: 0,
     },
 
-    location: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+   location: {
+  address: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  lat: {
+    type: Number,
+    required: true,
+  },
+  lng: {
+    type: Number,
+    required: true,
+  },
+},
 
     images: { 
       type: [
