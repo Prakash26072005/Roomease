@@ -74,7 +74,7 @@ export default function Navbar() {
       <div className="nav-right">
         <button className="icon-btn" onClick={() => navigate("/liked")}>❤️</button>
         <button className="icon-btn" onClick={() => navigate("/chats")}>💬</button>
-        <button className="icon-btn" onClick={() => navigate("/bookings")}>🏨</button>
+        <button className="icon-btn" onClick={() => navigate("/my-bookings")}>🏨</button>
 
         {/* Profile */}
         {user && (

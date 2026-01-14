@@ -7,6 +7,7 @@ import RoomDetails from "./components/RoomDetails";
 import MyRooms from "./components/MyRooms";
 import EditRoom from "./components/EditRoom";
 import Navbar from "./components/Navbar";
+import MyBookings from "./components/MyBookings";
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
         <Route path="/room/:id" element={<RoomDetails />} />
         <Route path="/my-rooms" element={<MyRooms />} />
         <Route path="/edit/:id" element={<EditRoom />} />
+        <Route path="/my-bookings" element={<MyBookings />} />
       </Routes>
     </BrowserRouter>
   );

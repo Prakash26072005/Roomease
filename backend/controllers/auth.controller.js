@@ -64,7 +64,13 @@ export const verifyOtp = async (req, res) => {
     res.json({
       success: true,
       token,
-      user: { email: user.email, name: user.name, googleId: user.googleId || null },
+     user: {
+  _id: user._id,
+  email: user.email,
+  name: user.name,
+  googleId: user.googleId
+}
+
     });
   } catch (err) {
     console.error("verifyOtp err:", err);
@@ -96,7 +102,13 @@ export const googleLogin = async (req, res) => {
     res.json({
       success: true,
       token,
-      user: { email: user.email, name: user.name, googleId: user.googleId },
+   user: {
+  _id: user._id,
+  email: user.email,
+  name: user.name,
+  googleId: user.googleId
+}
+
     });
   } catch (err) {
     console.error("googleLogin err:", err);
