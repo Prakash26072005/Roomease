@@ -1,12 +1,80 @@
 import express from "express";
-import dotenv from "dotenv";
-import { sendOtp, verifyOtp, googleLogin } from "../controllers/auth.controller.js";
+import passport from "passport";
+import jwt from "jsonwebtoken";
 
-dotenv.config();
+import {
+  sendOtp,
+  verifyOtp,
+  logout,
+  refreshAccessToken,
+  getMe,
+} from "../controllers/auth.controller.js";
+
+import { verifyToken } from "../middlewares/auth.middleware.js";
+
 const router = express.Router();
 
+/* ================= GOOGLE LOGIN ================= */
+router.get(
+  "/google",
+  passport.authenticate("google", {
+    scope: ["profile", "email"],
+    session: false,
+  })
+);
+
+/* ================= GOOGLE CALLBACK ================= */
+router.get(
+  "/google/callback",
+  passport.authenticate("google", {
+    session: false,
+    failureRedirect: "http://localhost:5173/login",
+  }),
+  (req, res) => {
+    const user = req.user;
+
+    const accessToken = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "15m" }
+    );
+
+    const refreshToken = jwt.sign(
+      { id: user._id },
+      process.env.REFRESH_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    const cookieOptions = {
+      httpOnly: true,
+      sameSite: "Lax",
+      secure: false,
+    };
+
+    // ✅ ONLY THIS (correct)
+    res.cookie("accessToken", accessToken, {
+      ...cookieOptions,
+      maxAge: 15 * 60 * 1000,
+    });
+
+    res.cookie("refreshToken", refreshToken, {
+      ...cookieOptions,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.redirect("http://localhost:5173");
+  }
+);
+
+/* ================= OTP ================= */
 router.post("/send-otp", sendOtp);
 router.post("/verify-otp", verifyOtp);
-router.post("/google-login", googleLogin);
+
+/* ================= AUTH ================= */
+router.post("/logout", logout);
+router.post("/refresh", refreshAccessToken);
+
+/* ================= USER ================= */
+router.get("/me", verifyToken, getMe);
 
 export default router;

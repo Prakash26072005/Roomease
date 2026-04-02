@@ -9,18 +9,38 @@ import EditRoom from "./components/EditRoom";
 import Navbar from "./components/Navbar";
 import MyBookings from "./components/MyBookings";
 
+import ProtectedRoute from "./components/ProtectedRoute";
+import PublicRoute from "./components/PublicRoute";
+import ChatPage from "./components/ChatPage";
+
 export default function App() {
   return (
     <BrowserRouter>
-    <Navbar/>
+      <Navbar />
       <Routes>
-          <Route path="/login" element={<Login />} />
+       <Route
+  path="/login"
+  element={
+    <PublicRoute>
+      <Login />
+    </PublicRoute>
+  }
+/>
         <Route path="/" element={<RoomsPage />} />
-        <Route path="/add" element={<AddRoom />} />
+        <Route
+          path="/add"
+          element={
+            <ProtectedRoute>
+              <AddRoom />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/room/:id" element={<RoomDetails />} />
         <Route path="/my-rooms" element={<MyRooms />} />
         <Route path="/edit/:id" element={<EditRoom />} />
         <Route path="/my-bookings" element={<MyBookings />} />
+        {/* <Route path="/chatpage" element={<ChatPage />} /> */}
+        <Route path="/chatpage/:userId" element={<ChatPage />} />
       </Routes>
     </BrowserRouter>
   );

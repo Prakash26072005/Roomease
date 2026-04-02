@@ -101,12 +101,7 @@ router.put(
           .json({ success: false, message: "Room not found" });
       }
 
-      // Check owner
-      // if (room.owner.toString() !== req.user._id.toString()) {
-      //   return res
-      //     .status(403)
-      //     .json({ success: false, message: "Not authorized" });
-      // }
+    
       if (!room.owner.equals(req.user._id)) {
   return res.status(403).json({ message: "Not authorized" });
 }

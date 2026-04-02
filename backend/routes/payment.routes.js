@@ -3,45 +3,48 @@ import crypto from "crypto";
 import razorpay from "../utils/razorpay.js";
 import Booking from "../models/booking.model.js";
 import Room from "../models/room.model.js";
-import User from "../models/user.model.js";
 import { sendEmail } from "../utils/sendEmail.js";
+import { verifyToken } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
-/* ---------------- CREATE ORDER ---------------- */
-router.post("/create-order", async (req, res) => {
+/* ================= CREATE ORDER ================= */
+router.post("/create-order", verifyToken, async (req, res) => {
   try {
     const { amount } = req.body;
 
     if (!amount) {
-      return res.status(400).json({ success: false, message: "Amount required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Amount required" });
     }
 
     const order = await razorpay.orders.create({
-      amount: amount * 100, // rupees → paise
+      amount: amount * 100, // ₹ → paise
       currency: "INR",
     });
 
-    res.json(order);
+    res.json({ success: true, order });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Order creation failed" });
+    console.error("Create Order Error:", err);
+    res
+      .status(500)
+      .json({ success: false, message: "Order creation failed" });
   }
 });
 
-/* ---------------- VERIFY PAYMENT ---------------- */
-router.post("/verify", async (req, res) => {
+/* ================= VERIFY PAYMENT ================= */
+router.post("/verify", verifyToken, async (req, res) => {
   try {
     const {
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature,
       roomId,
-      userId,
       startDate,
     } = req.body;
 
-    // 1️⃣ Verify Razorpay signature
+    // ================= SIGNATURE VERIFY =================
     const body = razorpay_order_id + "|" + razorpay_payment_id;
 
     const expectedSignature = crypto
@@ -50,18 +53,37 @@ router.post("/verify", async (req, res) => {
       .digest("hex");
 
     if (expectedSignature !== razorpay_signature) {
-      return res.status(400).json({ success: false, message: "Invalid signature" });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid payment signature",
+      });
     }
 
-    // 2️⃣ Fetch room & users
+    // ================= FETCH DATA =================
     const room = await Room.findById(roomId).populate("owner");
-    const user = await User.findById(userId);
+    const user = req.user; // 🔥 from JWT cookie
 
-    if (!room || !user) {
-      return res.status(404).json({ success: false, message: "Room/User not found" });
+    if (!room) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Room not found" });
     }
 
-    // 3️⃣ Save booking (MONTHLY RENT)
+    // ================= DUPLICATE BOOKING CHECK =================
+    const existingBooking = await Booking.findOne({
+      room: room._id,
+      user: user._id,
+    });
+
+    if (existingBooking) {
+      return res.json({
+        success: true,
+        message: "Already booked",
+        booking: existingBooking,
+      });
+    }
+
+    // ================= CREATE BOOKING =================
     const booking = await Booking.create({
       room: room._id,
       user: user._id,
@@ -71,11 +93,12 @@ router.post("/verify", async (req, res) => {
       paymentId: razorpay_payment_id,
     });
 
-    // 4️⃣ Send email to OWNER
+    // ================= SEND EMAIL =================
     await sendEmail(
       room.owner.email,
-      "Your room has been booked 🎉",
-      `Hello ${room.owner.name},
+      "🎉 Your room has been booked",
+      `
+Hello ${room.owner.name},
 
 Your room "${room.title}" has been booked.
 
@@ -84,13 +107,20 @@ Start Date: ${startDate}
 Monthly Rent: ₹${room.price}
 
 Regards,
-RoomEase`
+RoomEase
+`
     );
 
-    res.json({ success: true, booking });
+    res.json({
+      success: true,
+      message: "Booking successful",
+      booking,
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Payment verification failed" });
+    console.error("Verify Payment Error:", err);
+    res
+      .status(500)
+      .json({ success: false, message: "Payment verification failed" });
   }
 });
 
