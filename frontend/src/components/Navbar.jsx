@@ -1,138 +1,10 @@
-// import React, { useState, useEffect, useRef } from "react";
-// import { useNavigate } from "react-router-dom";
-// import "../styles/Navbar.css";
-// import logo from "../assets/RoomEase.png";
-// import { getValidUser } from "../utils/auth";
-
-// export default function Navbar() {
-//   const [query, setQuery] = useState("");
-//   const [showProfile, setShowProfile] = useState(false);
-//   const [user, setUser] = useState(null);
-//   const dropdownRef = useRef();
-//   const navigate = useNavigate();
-
-//   // ✅ Load user safely (check token expiry)
-//   useEffect(() => {
-//     const validUser = getValidUser();
-//     setUser(validUser);
-//   }, []);
-
-//   // Close dropdown on outside click
-//   useEffect(() => {
-//     const handleClickOutside = (e) => {
-//       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-//         setShowProfile(false);
-//       }
-//     };
-//     window.addEventListener("click", handleClickOutside);
-//     return () => window.removeEventListener("click", handleClickOutside);
-//   }, []);
-
-//   // Logout
-// const handleLogout = async () => {
-//   await fetch("http://localhost:5000/api/auth/logout", {
-//     method: "POST",
-//     credentials: "include",
-//   });
-
-//   localStorage.removeItem("user");
-//   setUser(null);
-//   navigate("/");
-// };
-
-
-//   const firstLetter = user?.name
-//     ? user.name.charAt(0).toUpperCase()
-//     : "U";
-
-//   const onSearch = (e) => {
-//     e.preventDefault();
-//   };
-
-//   return (
-//     <nav className="navbar">
-//       {/* Left Side */}
-//       <div className="nav-left">
-//         <img src={logo} alt="Logo" className="logo-img" />
-//         <h1 className="site-title">RoomEase</h1>
-
-//         <button className="home-btn" onClick={() => navigate("/")}>
-//           Home
-//         </button>
-//       </div>
-
-//       {/* Search */}
-//       <form className="search-form" onSubmit={onSearch}>
-//         <input
-//           className="search-input"
-//           type="text"
-//           placeholder="Search by city..."
-//           value={query}
-//           onChange={(e) => setQuery(e.target.value)}
-//         />
-//         <button type="submit" className="search-btn">
-//           Search
-//         </button>
-//       </form>
-
-//       {/* Right Side */}
-//       <div className="nav-right">
-//         <button className="icon-btn" onClick={() => navigate("/liked")}>❤️</button>
-//         <button className="icon-btn" onClick={() => navigate("/chat-dashboard")}>💬</button>
-//         <button className="icon-btn" onClick={() => navigate("/my-bookings")}>🏨</button>
-
-//         {/* Profile */}
-//         {user && (
-//           <div className="profile-box" ref={dropdownRef}>
-//             <div
-//               className="profile-circle"
-//               onClick={() => setShowProfile(!showProfile)}
-//             >
-//               {firstLetter}
-//             </div>
-
-//             {showProfile && (
-//               <div className="dropdown">
-//                 <div className="dropdown-header">{user.name}</div>
-
-//                 <div
-//                   className="dropdown-item"
-//                   onClick={() => navigate("/add")}
-//                 >
-//                   ➕ Add your room
-//                 </div>
-
-//                 <div
-//                   className="dropdown-item"
-//                   onClick={() => navigate("/my-rooms")}
-//                 >
-//                   📋 Added rooms
-//                 </div>
-//               </div>
-//             )}
-//           </div>
-//         )}
-
-//         {/* Login / Logout */}
-//         {user ? (
-//           <button className="login-btn" onClick={handleLogout}>
-//             Logout
-//           </button>
-//         ) : (
-//           <button className="login-btn" onClick={() => navigate("/login")}>
-//             Login
-//           </button>
-//         )}
-//       </div>
-//     </nav>
-//   );
-// }
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../utils/axios";
 import "../styles/Navbar.css";
 import logo from "../assets/RoomEase.png";
-
+import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined';
+import ChatBubbleOutlineOutlinedIcon from '@mui/icons-material/ChatBubbleOutlineOutlined';
+import CottageOutlinedIcon from '@mui/icons-material/CottageOutlined';
 export default function Navbar() {
   const [query, setQuery] = useState("");
   const [showProfile, setShowProfile] = useState(false);
@@ -142,38 +14,18 @@ export default function Navbar() {
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
-  // ================= AUTO LOGIN =================
+  // ================= LOAD USER FROM LOCALSTORAGE =================
   useEffect(() => {
-    let isMounted = true;
+    const storedUser = localStorage.getItem("user");
 
-    const fetchUser = async () => {
-      try {
-        const res = await api.get("/api/auth/me");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    } else {
+      setUser(null);
+    }
 
-        if (isMounted && res.data.success) {
-          setUser(res.data.user);
-        }
-      } catch (err) {
-        if (isMounted) setUser(null);
-      } finally {
-        if (isMounted) setLoadingUser(false);
-      }
-    };
-
-    fetchUser();
-
-    return () => {
-      isMounted = false;
-    };
+    setLoadingUser(false);
   }, []);
-
-
-  useEffect(() => {
-  const storedUser = localStorage.getItem("user");
-  if (storedUser) {
-    setUser(JSON.parse(storedUser));
-  }
-}, []);
 
   // ================= CLOSE DROPDOWN =================
   useEffect(() => {
@@ -191,39 +43,41 @@ export default function Navbar() {
   }, []);
 
   // ================= LOGOUT =================
-  const handleLogout = async () => {
-    try {
-      await api.post("/api/auth/logout");
-
-      setUser(null);
-      navigate("/login");
-    } catch (err) {
-      console.error("Logout error:", err);
-    }
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    setUser(null);
+    navigate("/login");
   };
 
   const firstLetter = user?.name?.charAt(0).toUpperCase() || "U";
 
+  // ================= SEARCH =================
   const onSearch = (e) => {
     e.preventDefault();
 
     if (!query.trim()) return;
 
-    // future: search route
     navigate(`/?search=${query}`);
+  };
+
+  // ================= CHAT NAVIGATION =================
+  const handleChatClick = () => {
+    if (!user) {
+      navigate("/login");
+    } else {
+      navigate("/chatpage/:userId"); // ✅ fixed route
+    }
   };
 
   // ================= UI =================
   return (
     <nav className="navbar">
       {/* LEFT */}
-      <div className="nav-left">
+      <div className="nav-left" onClick={() => navigate("/")}>
         <img src={logo} alt="Logo" className="logo-img" />
         <h1 className="site-title">RoomEase</h1>
 
-        <button className="home-btn" onClick={() => navigate("/")}>
-          Home
-        </button>
+    
       </div>
 
       {/* SEARCH */}
@@ -243,21 +97,18 @@ export default function Navbar() {
       {/* RIGHT */}
       <div className="nav-right">
         <button className="icon-btn" onClick={() => navigate("/liked")}>
-          ❤️
+          <FavoriteBorderOutlinedIcon/>
         </button>
 
-        <button
-          className="icon-btn"
-          onClick={() => navigate("/chatpage")}
-        >
-          💬
+        <button className="icon-btn" onClick={handleChatClick}>
+          <ChatBubbleOutlineOutlinedIcon/>
         </button>
 
         <button
           className="icon-btn"
           onClick={() => navigate("/my-bookings")}
         >
-          🏨
+         <CottageOutlinedIcon/>
         </button>
 
         {/* ================= PROFILE ================= */}
@@ -299,8 +150,8 @@ export default function Navbar() {
         )}
 
         {/* ================= LOGIN / LOGOUT ================= */}
-        {!loadingUser && (
-          user ? (
+        {!loadingUser &&
+          (user ? (
             <button className="login-btn" onClick={handleLogout}>
               Logout
             </button>
@@ -311,8 +162,7 @@ export default function Navbar() {
             >
               Login
             </button>
-          )
-        )}
+          ))}
       </div>
     </nav>
   );

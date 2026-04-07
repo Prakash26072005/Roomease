@@ -40,7 +40,14 @@ export default function App() {
         <Route path="/edit/:id" element={<EditRoom />} />
         <Route path="/my-bookings" element={<MyBookings />} />
         {/* <Route path="/chatpage" element={<ChatPage />} /> */}
-        <Route path="/chatpage/:userId" element={<ChatPage />} />
+   <Route
+  path="/chatpage/:userId"
+  element={
+    <ProtectedRoute>
+      <ChatPage />
+    </ProtectedRoute>
+  }
+/>
       </Routes>
     </BrowserRouter>
   );
