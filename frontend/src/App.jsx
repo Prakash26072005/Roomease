@@ -12,6 +12,7 @@ import MyBookings from "./components/MyBookings";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
 import ChatPage from "./components/ChatPage";
+import GoogleSuccess from "./components/GoogleSuccess";
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
     </PublicRoute>
   }
 />
+<Route path="/google-success" element={<GoogleSuccess/>} />
         <Route path="/" element={<RoomsPage />} />
         <Route
           path="/add"

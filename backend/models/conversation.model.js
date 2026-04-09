@@ -1,4 +1,4 @@
-// models/conversation.model.js
+
 // import mongoose from "mongoose";
 
 // const conversationSchema = new mongoose.Schema(
@@ -7,16 +7,22 @@
 //       {
 //         type: mongoose.Schema.Types.ObjectId,
 //         ref: "User",
+//         required: true,
 //       },
 //     ],
-//     lastMessage: String,
+//     lastMessage: {
+//       type: String,
+//       default: "",
+//     },
 //   },
 //   { timestamps: true }
 // );
 
+// // 🔥 IMPORTANT: prevent duplicates (sorted members required)
+// conversationSchema.index({ members: 1 }, { unique: true });
+
 // export default mongoose.model("Conversation", conversationSchema);
 
-// models/conversation.model.js
 import mongoose from "mongoose";
 
 const conversationSchema = new mongoose.Schema(
@@ -36,7 +42,12 @@ const conversationSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// 🔥 IMPORTANT: prevent duplicates (sorted members required)
+// 🔥 ensure sorted uniqueness
+conversationSchema.pre("save", function (next) {
+  this.members = this.members.sort();
+  next();
+});
+
 conversationSchema.index({ members: 1 }, { unique: true });
 
 export default mongoose.model("Conversation", conversationSchema);

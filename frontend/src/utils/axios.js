@@ -8,19 +8,24 @@
 // export default api;
 
 
-
 import axios from "axios";
 
 const api = axios.create({
   baseURL: "http://localhost:5000",
-  withCredentials: true, // 🔥 cookies auto send
+  withCredentials: true, // 🔥 cookies send
 });
 
-// ================= REFRESH CONTROL =================
+// ================= LOGOUT FLAG =================
 let isRefreshing = false;
+let isLoggingOut = false;
 let queue = [];
 
-// resolve/reject all queued requests
+// 🔥 export setter (logout ke liye)
+export const setIsLoggingOut = (value) => {
+  isLoggingOut = value;
+};
+
+// ================= PROCESS QUEUE =================
 const processQueue = (error) => {
   queue.forEach((p) => {
     if (error) p.reject(error);
@@ -35,16 +40,20 @@ api.interceptors.response.use(
   async (err) => {
     const originalRequest = err.config;
 
-    // ❌ If refresh itself fails → stop
+    // ❌ agar refresh hi fail ho raha → stop
     if (originalRequest.url.includes("/auth/refresh")) {
       return Promise.reject(err);
     }
 
     // ================= HANDLE 401 =================
-    if (err.response?.status === 401 && !originalRequest._retry) {
+    if (
+      err.response?.status === 401 &&
+      !originalRequest._retry &&
+      !isLoggingOut // 🔥 logout ke time refresh block
+    ) {
       originalRequest._retry = true;
 
-      // 🔁 If already refreshing → queue requests
+      // 🔁 agar already refresh ho raha → queue me daalo
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           queue.push({ resolve, reject });
@@ -54,23 +63,22 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // 🔥 Call refresh API
+        // 🔥 refresh call
         await axios.post(
           "http://localhost:5000/api/auth/refresh",
           {},
           { withCredentials: true }
         );
 
-        // ✅ resolve queued requests
+        // ✅ queue resolve
         processQueue();
 
         // 🔁 retry original request
         return api(originalRequest);
       } catch (refreshError) {
-        // ❌ reject queued requests
+        // ❌ queue reject
         processQueue(refreshError);
 
-        // ⚠️ DO NOT redirect here (important)
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

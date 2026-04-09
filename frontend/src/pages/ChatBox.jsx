@@ -1,3 +1,4 @@
+
 // import { useEffect, useState } from "react";
 // import api from "../utils/axios";
 // import { socket } from "../socket";
@@ -8,68 +9,78 @@
 //   const [text, setText] = useState("");
 
 //   const receiverId =
-//     currentChat?.members.find((m) => m._id !== user._id)?._id;
+//     currentChat?.members?.find(
+//       (m) => m?._id && m._id.toString() !== user._id.toString()
+//     )?._id;
 
-//   // load messages
+//   // ================= LOAD MESSAGES =================
 //   useEffect(() => {
-//     if (!currentChat) return;
+//     if (!currentChat?._id) return;
 
 //     api.get(`/api/messages/${currentChat._id}`).then((res) => {
 //       setMessages(res.data.messages);
 //     });
 //   }, [currentChat]);
 
-
+//   // ================= SOCKET LISTEN =================
 //   useEffect(() => {
-//   socket.on("receiveMessage", (msg) => {
-//     setMessages((prev) => [...prev, msg]);
-//   });
+//     const handleReceive = (msg) => {
+//       setMessages((prev) => [...prev, msg]);
+//     };
 
-//   socket.on("messageSent", (msg) => {
-//     setMessages((prev) => [...prev, msg]);
-//   });
+//     socket.on("receiveMessage", handleReceive);
+//     socket.on("messageSent", handleReceive);
 
-//   return () => {
-//     socket.off("receiveMessage");
-//     socket.off("messageSent");
-//   };
-// }, []);
+//     return () => {
+//       socket.off("receiveMessage", handleReceive);
+//       socket.off("messageSent", handleReceive);
+//     };
+//   }, []);
 
-
+//   // ================= SEND MESSAGE =================
 //   const sendMessage = () => {
-//   if (!text.trim()) return;
+//     if (!text.trim() || !receiverId) return;
 
-//   socket.emit("sendMessage", {
-//     senderId: user._id,
-//     receiverId,
-//     text,
-//   });
+//     socket.emit("sendMessage", {
+//       senderId: user._id,
+//       receiverId,
+//       text,
+//     });
 
-//   setText("");
-// };
+//     setText("");
+//   };
 
-//   if (!currentChat) return <h2>Select a chat</h2>;
+//   // ================= EMPTY STATE =================
+//   if (!currentChat || !currentChat.members) {
+//     return <h2>Select a chat</h2>;
+//   }
 
+//   // ================= UI =================
 //   return (
-//     <div style={{ flex: 1 }}>
-//       <div>
+//     <div style={{ flex: 1, padding: "10px" }}>
+//       <div style={{ minHeight: "80%" }}>
 //         {messages.map((m, i) => (
-//           <p key={i}>
-//             {m.sender.toString() === user._id.toString() ? "Me: " : "User: "}
-//            <MessageBubble message={m} own={m.sender === user._id} />
-//           </p>
+//           <div key={i}>
+//             <MessageBubble
+//               message={m}
+//               own={m.sender.toString() === user._id.toString()}
+//             />
+//           </div>
 //         ))}
 //       </div>
 
-//       <input
-//         value={text}
-//         onChange={(e) => setText(e.target.value)}
-//       />
-//       <button onClick={sendMessage}>Send</button>
+//       <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+//         <input
+//           value={text}
+//           onChange={(e) => setText(e.target.value)}
+//           placeholder="Type a message..."
+//           style={{ flex: 1 }}
+//         />
+//         <button onClick={sendMessage}>Send</button>
+//       </div>
 //     </div>
 //   );
 // }
-
 
 import { useEffect, useState } from "react";
 import api from "../utils/axios";
@@ -80,68 +91,89 @@ export default function ChatBox({ currentChat, user }) {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
 
-  // const receiverId =
-  //   currentChat?.members.find((m) => m._id !== user._id)?._id;
-const receiverId =
-  currentChat?.members.find(
-    (m) => m._id.toString() !== user._id.toString()
-  )?._id;
-  // load messages
+  const receiverId =
+    currentChat?.members?.find(
+      (m) => m?._id && m._id.toString() !== user._id.toString()
+    )?._id;
+
+  // ================= LOAD MESSAGES =================
   useEffect(() => {
-    if (!currentChat) return;
+    if (!currentChat?._id) return;
 
     api.get(`/api/messages/${currentChat._id}`).then((res) => {
       setMessages(res.data.messages);
     });
   }, [currentChat]);
 
-
+  // ================= SOCKET LISTEN =================
   useEffect(() => {
-  socket.on("receiveMessage", (msg) => {
-    setMessages((prev) => [...prev, msg]);
-  });
+    const handleReceive = (msg) => {
+      if (
+        msg.conversationId.toString() ===
+        currentChat?._id.toString()
+      ) {
+        setMessages((prev) => [...prev, msg]);
+      }
+    };
 
-  socket.on("messageSent", (msg) => {
-    setMessages((prev) => [...prev, msg]);
-  });
+    socket.on("receiveMessage", handleReceive);
 
-  return () => {
-    socket.off("receiveMessage");
-    socket.off("messageSent");
-  };
-}, []);
+    return () => {
+      socket.off("receiveMessage", handleReceive);
+    };
+  }, [currentChat]);
 
-
+  // ================= SEND MESSAGE =================
   const sendMessage = () => {
-  if (!text.trim()) return;
+    if (!text.trim() || !receiverId) return;
 
-  socket.emit("sendMessage", {
-    senderId: user._id,
-    receiverId,
-    text,
-  });
+    const newMsg = {
+      _id: Date.now(),
+      sender: user._id,
+      text,
+      conversationId: currentChat._id,
+    };
 
-  setText("");
-};
+    // 🔥 optimistic UI
+    setMessages((prev) => [...prev, newMsg]);
 
-  if (!currentChat) return <h2>Select a chat</h2>;
+    socket.emit("sendMessage", {
+      senderId: user._id,
+      receiverId,
+      text,
+    });
 
+    setText("");
+  };
+
+  // ================= EMPTY STATE =================
+  if (!currentChat || !currentChat.members) {
+    return <h2>Select a chat</h2>;
+  }
+
+  // ================= UI =================
   return (
-    <div style={{ flex: 1 }}>
-      <div>
+    <div style={{ flex: 1, padding: "10px" }}>
+      <div style={{ minHeight: "80%" }}>
         {messages.map((m, i) => (
-          <p key={i}>
-            {m.sender.toString() === user._id.toString() ? "Me: " : "User: "}
-           <MessageBubble message={m} own={m.sender.toString() === user._id.toString()} />
-          </p>
+          <div key={m._id || i}>
+            <MessageBubble
+              message={m}
+              own={m.sender.toString() === user._id.toString()}
+            />
+          </div>
         ))}
       </div>
 
-      <input
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-      />
-      <button onClick={sendMessage}>Send</button>
+      <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+        <input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="Type a message..."
+          style={{ flex: 1 }}
+        />
+        <button onClick={sendMessage}>Send</button>
+      </div>
     </div>
   );
 }
