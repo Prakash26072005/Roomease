@@ -1,13 +1,15 @@
 
+// import "../styles/ChatBox.css"
 // import { useEffect, useState } from "react";
 // import api from "../utils/axios";
 // import { socket } from "../socket";
 // import MessageBubble from "./MessageBubble";
-
+// import SendIcon from '@mui/icons-material/Send';
+// import { useRef } from "react";
 // export default function ChatBox({ currentChat, user }) {
 //   const [messages, setMessages] = useState([]);
 //   const [text, setText] = useState("");
-
+// const scrollRef = useRef();
 //   const receiverId =
 //     currentChat?.members?.find(
 //       (m) => m?._id && m._id.toString() !== user._id.toString()
@@ -25,21 +27,39 @@
 //   // ================= SOCKET LISTEN =================
 //   useEffect(() => {
 //     const handleReceive = (msg) => {
-//       setMessages((prev) => [...prev, msg]);
+//       if (
+//         msg.conversationId.toString() ===
+//         currentChat?._id.toString()
+//       ) {
+//         setMessages((prev) => [...prev, msg]);
+//       }
 //     };
 
 //     socket.on("receiveMessage", handleReceive);
-//     socket.on("messageSent", handleReceive);
 
 //     return () => {
 //       socket.off("receiveMessage", handleReceive);
-//       socket.off("messageSent", handleReceive);
 //     };
-//   }, []);
+//   }, [currentChat]);
+
+//   useEffect(() => {
+//   scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+// }, [messages]);
+
 
 //   // ================= SEND MESSAGE =================
 //   const sendMessage = () => {
 //     if (!text.trim() || !receiverId) return;
+
+//     const newMsg = {
+//       _id: Date.now(),
+//       sender: user._id,
+//       text,
+//       conversationId: currentChat._id,
+//     };
+
+//     // 🔥 optimistic UI
+//     setMessages((prev) => [...prev, newMsg]);
 
 //     socket.emit("sendMessage", {
 //       senderId: user._id,
@@ -50,51 +70,75 @@
 //     setText("");
 //   };
 
+//   const handleKeyDown = (e) => {
+//   if (e.key === "Enter") {
+//     sendMessage();
+//   }
+// };
+
 //   // ================= EMPTY STATE =================
 //   if (!currentChat || !currentChat.members) {
 //     return <h2>Select a chat</h2>;
 //   }
 
+  
 //   // ================= UI =================
-//   return (
-//     <div style={{ flex: 1, padding: "10px" }}>
-//       <div style={{ minHeight: "80%" }}>
-//         {messages.map((m, i) => (
-//           <div key={i}>
-//             <MessageBubble
-//               message={m}
-//               own={m.sender.toString() === user._id.toString()}
-//             />
-//           </div>
-//         ))}
-//       </div>
-
-//       <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
-//         <input
-//           value={text}
-//           onChange={(e) => setText(e.target.value)}
-//           placeholder="Type a message..."
-//           style={{ flex: 1 }}
-//         />
-//         <button onClick={sendMessage}>Send</button>
-//       </div>
+// return (
+//   <div className="chatbox">
+//     {/* MESSAGES */}
+//    <div className="chat-messages">
+//   {messages.map((m, i) => (
+//     <div
+//       key={m._id || i}
+//       ref={i === messages.length - 1 ? scrollRef : null}
+//     >
+//       <MessageBubble
+//         message={m}
+//         own={m.sender.toString() === user._id.toString()}
+//       />
 //     </div>
-//   );
+//   ))}
+// </div>
+
+//     {/* INPUT */}
+//     <div className="chat-input-area">
+//       <input
+//         value={text}
+//         onChange={(e) => setText(e.target.value)}
+//         placeholder="Type a message..."
+//         onKeyDown={handleKeyDown}
+//       />
+
+//       <button className="send-btn" onClick={sendMessage}>
+//         <SendIcon />
+//       </button>
+//     </div>
+//   </div>
+// );
 // }
 
-import { useEffect, useState } from "react";
+import "../styles/ChatBox.css";
+import { useEffect, useState, useRef } from "react";
 import api from "../utils/axios";
 import { socket } from "../socket";
 import MessageBubble from "./MessageBubble";
+import SendIcon from "@mui/icons-material/Send";
 
 export default function ChatBox({ currentChat, user }) {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
+  const scrollRef = useRef();
 
+  // 🔥 get receiver
   const receiverId =
     currentChat?.members?.find(
       (m) => m?._id && m._id.toString() !== user._id.toString()
     )?._id;
+
+  // 🔥 get other user (for header)
+  const otherUser = currentChat?.members?.find(
+    (m) => m?._id && m._id.toString() !== user._id.toString()
+  );
 
   // ================= LOAD MESSAGES =================
   useEffect(() => {
@@ -123,6 +167,11 @@ export default function ChatBox({ currentChat, user }) {
     };
   }, [currentChat]);
 
+  // ================= AUTO SCROLL =================
+  useEffect(() => {
+    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
   // ================= SEND MESSAGE =================
   const sendMessage = () => {
     if (!text.trim() || !receiverId) return;
@@ -146,6 +195,13 @@ export default function ChatBox({ currentChat, user }) {
     setText("");
   };
 
+  // 🔥 Enter to send
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      sendMessage();
+    }
+  };
+
   // ================= EMPTY STATE =================
   if (!currentChat || !currentChat.members) {
     return <h2>Select a chat</h2>;
@@ -153,10 +209,29 @@ export default function ChatBox({ currentChat, user }) {
 
   // ================= UI =================
   return (
-    <div style={{ flex: 1, padding: "10px" }}>
-      <div style={{ minHeight: "80%" }}>
+    <div className="chatbox">
+
+      {/* 🔥 HEADER */}
+      <div className="chat-header">
+        <div className="chat-user">
+          <div className="chat-avatar">
+            {otherUser?.name?.charAt(0).toUpperCase() || "U"}
+          </div>
+
+          <div className="chat-user-info">
+            <h3>{otherUser?.name || "User"}</h3>
+            <span>Active now</span>
+          </div>
+        </div>
+      </div>
+
+      {/* 🔥 MESSAGES */}
+      <div className="chat-messages">
         {messages.map((m, i) => (
-          <div key={m._id || i}>
+          <div
+            key={m._id || i}
+            ref={i === messages.length - 1 ? scrollRef : null}
+          >
             <MessageBubble
               message={m}
               own={m.sender.toString() === user._id.toString()}
@@ -165,14 +240,18 @@ export default function ChatBox({ currentChat, user }) {
         ))}
       </div>
 
-      <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+      {/* 🔥 INPUT */}
+      <div className="chat-input-area">
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Type a message..."
-          style={{ flex: 1 }}
+          onKeyDown={handleKeyDown}
         />
-        <button onClick={sendMessage}>Send</button>
+
+        <button className="send-btn" onClick={sendMessage}>
+          <SendIcon />
+        </button>
       </div>
     </div>
   );

@@ -7,6 +7,10 @@
 
 // const router = express.Router();
 
+// // helper 🔥
+// const getSortedMembers = (id1, id2) => {
+//   return [id1.toString(), id2.toString()].sort();
+// };
 
 // // ================= CREATE / GET CONVERSATION =================
 // router.post("/conversation", verifyToken, async (req, res) => {
@@ -17,22 +21,24 @@
 //   }
 
 //   try {
-//     const members = [
-//       req.user._id.toString(),
-//       receiverId.toString(),
-//     ];
+//     const members = getSortedMembers(req.user._id, receiverId);
 
-//     // 🔥 FIXED QUERY
-//     let convo = await Conversation.findOne({
-//       members: { $all: members, $size: 2 },
-//     }).populate("members", "name");
+//     let convo = await Conversation.findOne({ members }).populate(
+//       "members",
+//       "name"
+//     );
 
 //     if (!convo) {
-//       convo = await Conversation.create({
-//         members,
-//       });
+//       try {
+//         convo = await Conversation.create({ members });
+//       } catch (err) {
+//         if (err.code === 11000) {
+//           convo = await Conversation.findOne({ members });
+//         } else {
+//           throw err;
+//         }
+//       }
 
-//       // 🔥 populate after create
 //       convo = await convo.populate("members", "name");
 //     }
 
@@ -43,7 +49,6 @@
 //   }
 // });
 
-
 // // ================= SEND MESSAGE =================
 // router.post("/send", verifyToken, async (req, res) => {
 //   const { receiverId, text } = req.body;
@@ -53,20 +58,22 @@
 //   }
 
 //   try {
-//     const members = [
-//       req.user._id.toString(),
-//       receiverId.toString(),
-//     ];
+//     const members = getSortedMembers(req.user._id, receiverId);
 
-//     // 🔥 FIXED QUERY
-//     let convo = await Conversation.findOne({
-//       members: { $all: members, $size: 2 },
-//     });
+//     let convo;
 
-//     if (!convo) {
-//       convo = await Conversation.create({
-//         members,
-//       });
+//     try {
+//       convo = await Conversation.findOne({ members });
+
+//       if (!convo) {
+//         convo = await Conversation.create({ members });
+//       }
+//     } catch (err) {
+//       if (err.code === 11000) {
+//         convo = await Conversation.findOne({ members });
+//       } else {
+//         throw err;
+//       }
 //     }
 
 //     const message = await Message.create({
@@ -75,7 +82,6 @@
 //       text,
 //     });
 
-//     // 🔥 update last message
 //     convo.lastMessage = text;
 //     await convo.save();
 
@@ -86,7 +92,6 @@
 //   }
 // });
 
-
 // // ================= GET USER CONVERSATIONS =================
 // router.get("/conversations/my", verifyToken, async (req, res) => {
 //   try {
@@ -94,7 +99,7 @@
 //       members: req.user._id,
 //     })
 //       .populate("members", "name")
-//       .sort({ updatedAt: -1 }); // 🔥 latest first
+//       .sort({ updatedAt: -1 });
 
 //     res.json({ success: true, conversations });
 //   } catch (err) {
@@ -102,7 +107,6 @@
 //     res.status(500).json({ success: false });
 //   }
 // });
-
 
 // // ================= GET MESSAGES =================
 // router.get("/:conversationId", verifyToken, async (req, res) => {
@@ -119,6 +123,8 @@
 // });
 
 // export default router;
+
+
 import express from "express";
 import Message from "../models/message.model.js";
 import Conversation from "../models/conversation.model.js";
@@ -143,7 +149,9 @@ router.post("/conversation", verifyToken, async (req, res) => {
   try {
     const members = getSortedMembers(req.user._id, receiverId);
 
-    let convo = await Conversation.findOne({ members }).populate(
+    let convo = await Conversation.findOne({
+  members: { $all: members, $size: 2 },
+}).populate(
       "members",
       "name"
     );
@@ -153,7 +161,7 @@ router.post("/conversation", verifyToken, async (req, res) => {
         convo = await Conversation.create({ members });
       } catch (err) {
         if (err.code === 11000) {
-          convo = await Conversation.findOne({ members });
+    convo = await Conversation.findOne({ members });
         } else {
           throw err;
         }
@@ -183,7 +191,9 @@ router.post("/send", verifyToken, async (req, res) => {
     let convo;
 
     try {
-      convo = await Conversation.findOne({ members });
+     let convo = await Conversation.findOne({
+  members: { $all: members, $size: 2 },
+});
 
       if (!convo) {
         convo = await Conversation.create({ members });

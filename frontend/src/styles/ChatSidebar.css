@@ -1,5 +1,7 @@
 .chat-sidebar {
   width: 320px;
+  /* height: 100vh ❌ REMOVE THIS */
+  flex-shrink: 0;
   background: #fff;
   border-right: 1px solid #e5e7eb;
   padding: 15px;
@@ -30,6 +32,16 @@
 .chat-list {
   overflow-y: auto;
   flex: 1;
+  scrollbar-width: thin;
+}
+
+.chat-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
 }
 
 /* ITEM */
@@ -68,12 +80,26 @@
 }
 
 .chat-info h4 {
-  font-size: 15px;
+  font-size: 20px;
   margin: 0;
 }
 
 .chat-info p {
-  font-size: 13px;
+  font-size: 15px;
   color: gray;
   margin-top: 2px;
+}
+
+.chat-item.active {
+  background: #e0edff; /* light blue */
+  border:1px solid #d0dbed;
+}
+
+.chat-item.active h4 {
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.chat-item.active p {
+  color: #1e40af;
 }
