@@ -4,7 +4,7 @@ import "../styles/Navbar.css";
 import logo from "../assets/RoomEase.png";
 import api from "../utils/axios";
 import { setIsLoggingOut } from "../utils/axios";
-
+import AddIcon from '@mui/icons-material/Add';
 import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined';
 import ChatBubbleOutlineOutlinedIcon from '@mui/icons-material/ChatBubbleOutlineOutlined';
 import CottageOutlinedIcon from '@mui/icons-material/CottageOutlined';
@@ -123,7 +123,7 @@ const handleLogout = async () => {
         </button>
 
         <button className="icon-btn" onClick={handleChatClick}>
-          <ChatBubbleOutlineOutlinedIcon/>
+         <i class="ri-chat-3-line"></i>
         </button>
 
         <button

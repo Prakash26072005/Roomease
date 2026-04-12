@@ -1,0 +1,100 @@
+.container {
+  padding: 20px 40px;
+}
+
+.back {
+  margin-bottom: 15px;
+  cursor: pointer;
+  color: #555;
+  font-weight: 500;
+}
+
+/* GRID */
+.topSection {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 30px;
+}
+
+/* LEFT */
+.left {
+  width: 100%;
+}
+
+/* RIGHT */
+.right {
+  position: sticky;
+  top: 100px;
+  height: fit-content;
+}
+
+.card {
+  border-radius: 12px;
+  padding: 20px;
+  background: white;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+/* PRICE */
+.price {
+  color: #2563eb;
+  font-size: 26px;
+  margin-bottom: 15px;
+}
+
+.price span {
+  color: gray;
+  font-size: 14px;
+}
+
+/* INPUT */
+.input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+/* BUTTONS */
+.payBtn {
+  width: 100%;
+  background: #2563eb;
+  color: white;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  margin-top: 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.chatBtn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid #2563eb;
+  background: white;
+  color: #2563eb;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* NOTE */
+.note {
+  text-align: center;
+  margin-top: 10px;
+  font-size: 12px;
+  color: gray;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .topSection {
+    grid-template-columns: 1fr;
+  }
+
+  .right {
+    position: static;
+  }
+}

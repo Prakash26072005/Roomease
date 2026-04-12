@@ -208,3 +208,8 @@
 .login-btn:hover {
   background: #095ed8;
 }
+i {
+  font-size: 24px;
+
+  cursor: pointer;
+}

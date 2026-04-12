@@ -75,7 +75,7 @@ export default function MyBookings() {
             padding: 10,
           }}
         >
-          <h3>{b.room.title}</h3>
+         <h3>{b.room?.title}</h3>
           <p>Rent: ₹{b.amount} / month</p>
           <p>Start Date: {new Date(b.startDate).toDateString()}</p>
           <p>Status: {b.status}</p>
