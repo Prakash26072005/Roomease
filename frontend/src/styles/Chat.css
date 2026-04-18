@@ -1,4 +1,16 @@
-.chat-page {
+/* .chat-page {
   display: flex;
-  height: calc(100vh - 70px); /* navbar adjust */
+  height: calc(100vh - 70px);
+} */
+ .chat-page {
+  display: flex;
+  height: calc(100vh - 70px);
+  overflow: hidden;
+}
+
+/* MOBILE FIX */
+@media (max-width: 768px) {
+  .chat-page {
+    position: relative;
+  }
 }

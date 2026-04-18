@@ -1,121 +1,32 @@
-// import React, { useEffect, useState } from "react";
-// import { Link } from "react-router-dom";
-// import api from "../utils/axios";
-
-// export default function RoomsPage() {
-//   const [rooms, setRooms] = useState([]);
-//   const [loading, setLoading] = useState(true);
-
-//   const fallbackImage =
-//     "https://via.placeholder.com/300x200?text=No+Image";
-
-//   // ================= FETCH ROOMS =================
-//   useEffect(() => {
-//     const fetchRooms = async () => {
-//       try {
-//         const res = await api.get("/api/rooms/all");
-
-//         if (res.data.success) {
-//           setRooms(res.data.rooms);
-//         }
-//       } catch (err) {
-//         console.error("Error fetching rooms:", err);
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-
-//     fetchRooms();
-//   }, []);
-
-//   if (loading) return <h2 style={{ padding: 20 }}>Loading rooms...</h2>;
-
-//   // ================= UI =================
-//   return (
-//     <div
-//       style={{
-//         display: "grid",
-//         gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-//         gap: "20px",
-//         padding: "20px",
-//       }}
-//     >
-//       {rooms.map((room) => (
-//         <Link
-//           to={`/room/${room._id}`}
-//           key={room._id}
-//           style={{ textDecoration: "none", color: "inherit" }}
-//         >
-//           <div
-//             style={{
-//               borderRadius: "12px",
-//               overflow: "hidden",
-//               boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-//               transition: "transform 0.2s ease",
-//             }}
-//             onMouseEnter={(e) =>
-//               (e.currentTarget.style.transform = "scale(1.03)")
-//             }
-//             onMouseLeave={(e) =>
-//               (e.currentTarget.style.transform = "scale(1)")
-//             }
-//           >
-//             {/* IMAGE */}
-//             <img
-//               src={room.images?.[0]?.url || fallbackImage}
-//               alt={room.title}
-//               style={{
-//                 width: "100%",
-//                 height: "200px",
-//                 objectFit: "cover",
-//               }}
-//             />
-
-//             {/* DETAILS */}
-//             <div style={{ padding: "12px" }}>
-//               <h3 style={{ margin: "0 0 5px" }}>{room.title}</h3>
-
-//               <p style={{ margin: "0 0 5px", color: "#666" }}>
-//                 {room.location?.address}
-//               </p>
-
-//               <p style={{ margin: 0, fontWeight: "bold" }}>
-//                 ₹{room.price} / month
-//               </p>
-//             </div>
-//           </div>
-//         </Link>
-//       ))}
-//     </div>
-//   );
-// }
-
-import React, { useEffect, useState} from "react";
-import { useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import api from "../utils/axios";
 import "../styles/RoomPage.css";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { MdLocationOn } from "react-icons/md";
 import { BiChat } from "react-icons/bi";
+import Loader from "./Loader.jsx";
 
 export default function RoomsPage() {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [liked, setLiked] = useState({});
-const navigate=useNavigate();
+  const navigate = useNavigate();
+
   const fallbackImage =
     "https://via.placeholder.com/300x200?text=No+Image";
 
+  // ================= FETCH ROOMS =================
   useEffect(() => {
     const fetchRooms = async () => {
       try {
         const res = await api.get("/api/rooms/all");
+
         if (res.data.success) {
           setRooms(res.data.rooms);
         }
       } catch (err) {
-        console.error(err);
+        console.error("Fetch rooms error:", err);
       } finally {
         setLoading(false);
       }
@@ -124,16 +35,61 @@ const navigate=useNavigate();
     fetchRooms();
   }, []);
 
-  const toggleLike = (id, e) => {
-    e.preventDefault();
-    setLiked((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
+  // ================= FETCH FAVORITES =================
+useEffect(() => {
+  const fetchFavorites = async () => {
+    try {
+      const res = await api.get("/api/favorites/favorites");
+
+      if (res.data.success) {
+        const likedMap = {};
+
+        res.data.rooms.forEach((room) => {
+          likedMap[room._id] = true;
+        });
+
+        setLiked(likedMap);
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  if (loading) return <h2 className="loading">Loading rooms...</h2>;
+  fetchFavorites();
+}, []);
 
+  // ================= TOGGLE LIKE =================
+const toggleLike = async (roomId, e) => {
+  e.preventDefault();
+  e.stopPropagation();
+
+  try {
+    const res = await api.post(`/api/favorites/toggle-favorite/${roomId}`);
+
+    if (res.data.success) {
+      const likedMap = {};
+
+      res.data.favorites.forEach((item) => {
+        const id = typeof item === "object" ? item._id : item;
+        likedMap[id] = true;
+      });
+
+      setLiked(likedMap);
+    }
+  } catch (err) {
+    console.error("Toggle error:", err);
+  }
+};
+
+  // ================= LOADING =================
+  // if (loading) {
+  //   return <h2 className="loading">Loading rooms...</h2>;
+  // }
+if (loading) {
+  return <Loader />;
+}
+
+  // ================= UI =================
   return (
     <div className="rooms-page">
       {/* HEADER */}
@@ -156,11 +112,13 @@ const navigate=useNavigate();
               {/* IMAGE */}
               <div className="room-image-wrapper">
                 <img
-                  src={room.images?.[0]?.url || fallbackImage}
+                  src={
+                    room.images?.[0]?.url || fallbackImage
+                  }
                   alt={room.title}
                 />
 
-                {/* HEART */}
+                {/* ❤️ HEART */}
                 <div
                   className="heart-icon"
                   onClick={(e) => toggleLike(room._id, e)}
@@ -178,7 +136,8 @@ const navigate=useNavigate();
                 <h3>{room.title}</h3>
 
                 <p className="location">
-                  <MdLocationOn /> {room.location?.address}
+                  <MdLocationOn />{" "}
+                  {room.location?.address || "No location"}
                 </p>
 
                 <p className="desc">
@@ -191,15 +150,19 @@ const navigate=useNavigate();
                   <span className="price">
                     ₹{room.price} <small>/month</small>
                   </span>
-<button
-  className="chat-btn"
-  onClick={(e) => {
-    e.preventDefault();
-    navigate(`/chatpage/${room.owner._id}`);
-  }}
->
-  <BiChat /> Chat
-</button>
+
+                  <button
+                    className="chat-btn"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      navigate(
+                        `/chatpage/${room.owner?._id}`
+                      );
+                    }}
+                  >
+                    <BiChat /> Chat
+                  </button>
                 </div>
 
                 <p className="owner">

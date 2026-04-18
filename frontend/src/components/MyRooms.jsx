@@ -1,5 +1,6 @@
 // import React, { useEffect, useState } from "react";
 // import { useNavigate } from "react-router-dom";
+// import styles from "../styles/MyRooms.module.css";
 
 // export default function MyRooms() {
 //   const [rooms, setRooms] = useState([]);
@@ -7,100 +8,102 @@
 
 //   useEffect(() => {
 //     fetch("http://localhost:5000/api/rooms/my-rooms", {
-//        credentials: "include",
+//       credentials: "include",
 //     })
-//       .then(res => res.json())
-//       .then(data => {
+//       .then((res) => res.json())
+//       .then((data) => {
 //         if (data.success) setRooms(data.rooms);
-//         else console.log(data);
-//       })
-//       .catch(err => console.log(err));
+//       });
 //   }, []);
 
 //   const deleteRoom = async (id) => {
-//     const confirmDelete = window.confirm("Are you sure you want to delete this room?");
-//     if (!confirmDelete) return;
+//     if (!window.confirm("Delete this room?")) return;
 
-//     try {
-//       const res = await fetch(`http://localhost:5000/api/rooms/delete/${id}`, {
-//   method: "DELETE",
-//   credentials: "include",
-// });
-//       const data = await res.json();
-
-//       if (data.success) {
-//         setRooms(prev => prev.filter(room => room._id !== id));
-//       } else {
-//         alert("Delete failed");
+//     const res = await fetch(
+//       `http://localhost:5000/api/rooms/delete/${id}`,
+//       {
+//         method: "DELETE",
+//         credentials: "include",
 //       }
-//     } catch (err) {
-//       console.error(err);
-//       alert("Delete failed");
+//     );
+
+//     const data = await res.json();
+
+//     if (data.success) {
+//       setRooms((prev) => prev.filter((r) => r._id !== id));
 //     }
 //   };
 
 //   const fallbackImage = "/fallback.jpg";
 
 //   return (
-//     <div style={{ padding: "20px" }}>
-//       <h2>My Added Rooms</h2>
+//     <div className={styles.container}>
+      
+//       {/* HEADER */}
+//       <div className={styles.header}>
+//         <div>
+//           <h2>My Rooms</h2>
+//           <p>Manage your room listings</p>
+//         </div>
 
-//       <div style={{
-//         display: "grid",
-//         gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-//         gap: "20px"
-//       }}>
-//         {rooms.map(room => (
+//         <button
+//           className={styles.addBtn}
+//           onClick={() =>navigate("/add")}
+//         >
+//           <i className="ri-add-large-line"></i> Add New Room
+//         </button>
+//       </div>
+
+//       {/* GRID */}
+//       <div className={styles.grid}>
+//         {rooms.map((room) => (
 //           <div
 //             key={room._id}
-//             role="button"
-//             tabIndex={0}
+//             className={styles.card}
 //             onClick={() => navigate(`/room/${room._id}`)}
-//             onKeyDown={(e) => { if (e.key === "Enter") navigate(`/room/${room._id}`); }}
-//             style={{
-//               border: "1px solid #ddd",
-//               padding: "10px",
-//               borderRadius: "10px",
-//               cursor: "pointer",
-//               userSelect: "none",
-//               display: "flex",
-//               flexDirection: "column",
-//               gap: 8,
-//             }}
 //           >
-//             <div style={{ width: "100%", height: 200, overflow: "hidden", borderRadius: 8 }}>
+            
+//             {/* IMAGE */}
+//             <div className={styles.imageWrapper}>
 //               <img
 //                 src={room.images?.[0]?.url || fallbackImage}
 //                 alt={room.title}
-//                 style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
 //               />
 //             </div>
 
-//             <div style={{ flex: 1 }}>
-//               <h3 style={{ margin: "8px 0" }}>{room.title}</h3>
-//               <p style={{ margin: 0, color: "#555" }}>{room.location.address}</p>
+//             {/* CONTENT */}
+//             <div className={styles.content}>
+//               <h3>{room.title}</h3>
+
+//               <p className={styles.location}>
+//                 <i className="ri-map-pin-line"></i>
+//                 {room.location?.address}
+//               </p>
+
+//               <p className={styles.price}>
+//                 ₹ {room.price} <span>/month</span>
+//               </p>
 //             </div>
 
-//             <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+//             {/* ACTIONS */}
+//             <div className={styles.actions} onClick={(e) => e.stopPropagation()}>
+              
 //               <button
-//                 onClick={(e) => {
-//                   e.stopPropagation();
-//                   deleteRoom(room._id);
-//                 }}
+//                 className={styles.editBtn}
+//                 onClick={() => navigate(`/edit/${room._id}`)}
 //               >
-//                 Delete
-//                 +
+//                 <i className="ri-edit-box-line"></i> Edit
 //               </button>
 
 //               <button
-//                 onClick={(e) => {
-//                   e.stopPropagation();
-//                   navigate(`/edit/${room._id}`);
-//                 }}
+//                 className={styles.deleteBtn}
+//                 onClick={() => deleteRoom(room._id)}
 //               >
-//                 Edit
+//                 <i className="ri-delete-bin-6-line"></i> Delete
 //               </button>
+
 //             </div>
+
 //           </div>
 //         ))}
 //       </div>
@@ -108,110 +111,126 @@
 //   );
 // }
 
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import styles from "../styles/MyRooms.module.css";
+import Loader from "./Loader.jsx";
 export default function MyRooms() {
   const [rooms, setRooms] = useState([]);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    fetch("http://localhost:5000/api/rooms/my-rooms", {
-       credentials: "include",
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) setRooms(data.rooms);
-        else console.log(data);
-      })
-      .catch(err => console.log(err));
-  }, []);
-
-  const deleteRoom = async (id) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this room?");
-    if (!confirmDelete) return;
-
+const [loading, setLoading] = useState(true);
+ useEffect(() => {
+  const fetchRooms = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/rooms/delete/${id}`, {
-  method: "DELETE",
-  credentials: "include",
-});
+      const res = await fetch("http://localhost:5000/api/rooms/my-rooms", {
+        credentials: "include",
+      });
+
       const data = await res.json();
 
       if (data.success) {
-        setRooms(prev => prev.filter(room => room._id !== id));
-      } else {
-        alert("Delete failed");
+        setRooms(data.rooms);
       }
     } catch (err) {
       console.error(err);
-      alert("Delete failed");
+    } finally {
+      setLoading(false); // 🔥 important
     }
   };
 
+  fetchRooms();
+}, []);
+
+  const deleteRoom = async (id) => {
+    if (!window.confirm("Delete this room?")) return;
+
+    const res = await fetch(
+      `http://localhost:5000/api/rooms/delete/${id}`,
+      {
+        method: "DELETE",
+        credentials: "include",
+      }
+    );
+
+    const data = await res.json();
+
+    if (data.success) {
+      setRooms((prev) => prev.filter((r) => r._id !== id));
+    }
+  };
+
+
   const fallbackImage = "/fallback.jpg";
 
+  if (loading) return <Loader />;
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>My Added Rooms</h2>
+    <div className={styles.container}>
+      
+      {/* HEADER */}
+      <div className={styles.header}>
+        <div>
+          <h2>My Rooms</h2>
+          <p>Manage your room listings</p>
+        </div>
 
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-        gap: "20px"
-      }}>
-        {rooms.map(room => (
+        <button
+          className={styles.addBtn}
+          onClick={() =>navigate("/add")}
+        >
+          <i className="ri-add-large-line"></i> Add New Room
+        </button>
+      </div>
+
+      {/* GRID */}
+      <div className={styles.grid}>
+        {rooms.map((room) => (
           <div
             key={room._id}
-            role="button"
-            tabIndex={0}
+            className={styles.card}
             onClick={() => navigate(`/room/${room._id}`)}
-            onKeyDown={(e) => { if (e.key === "Enter") navigate(`/room/${room._id}`); }}
-            style={{
-              border: "1px solid #ddd",
-              padding: "10px",
-              borderRadius: "10px",
-              cursor: "pointer",
-              userSelect: "none",
-              display: "flex",
-              flexDirection: "column",
-              gap: 8,
-            }}
           >
-            <div style={{ width: "100%", height: 200, overflow: "hidden", borderRadius: 8 }}>
+            
+            {/* IMAGE */}
+            <div className={styles.imageWrapper}>
               <img
                 src={room.images?.[0]?.url || fallbackImage}
                 alt={room.title}
-                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
               />
             </div>
 
-            <div style={{ flex: 1 }}>
-              <h3 style={{ margin: "8px 0" }}>{room.title}</h3>
-              <p style={{ margin: 0, color: "#555" }}>{room.location.address}</p>
+            {/* CONTENT */}
+            <div className={styles.content}>
+              <h3>{room.title}</h3>
+
+              <p className={styles.location}>
+                <i className="ri-map-pin-line"></i>
+                {room.location?.address}
+              </p>
+
+              <p className={styles.price}>
+                ₹ {room.price} <span>/month</span>
+              </p>
             </div>
 
-            <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+            {/* ACTIONS */}
+            <div className={styles.actions} onClick={(e) => e.stopPropagation()}>
+              
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  deleteRoom(room._id);
-                }}
+                className={styles.editBtn}
+                onClick={() => navigate(`/edit/${room._id}`)}
               >
-                Delete
-                +
+                <i className="ri-edit-box-line"></i> Edit
               </button>
 
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate(`/edit/${room._id}`);
-                }}
+                className={styles.deleteBtn}
+                onClick={() => deleteRoom(room._id)}
               >
-                Edit
+                <i className="ri-delete-bin-6-line"></i> Delete
               </button>
+
             </div>
+
           </div>
         ))}
       </div>

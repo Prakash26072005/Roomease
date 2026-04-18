@@ -1,0 +1,210 @@
+.container {
+  padding: 30px;
+  background: #f9fafb;
+  min-height: 100vh;
+}
+
+/* HEADER */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.header h2 {
+  margin: 0;
+}
+
+.header p {
+  color: gray;
+  margin-top: 5px;
+}
+
+/* ADD BUTTON */
+.addBtn {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 16px;
+  cursor: pointer;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* GRID */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+/* CARD */
+.card {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: 0.3s;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+/* IMAGE */
+.imageWrapper {
+  height: 200px;
+  overflow: hidden;
+}
+
+.imageWrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* CONTENT */
+.content {
+  padding: 15px;
+}
+
+.content h3 {
+  margin-bottom: 5px;
+}
+
+.location {
+  color: gray;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+}
+
+/* PRICE */
+.price {
+  color: #2563eb;
+  font-weight: 600;
+  margin-top: 10px;
+}
+
+.price span {
+  color: gray;
+  font-size: 14px;
+}
+/* ACTIONS */
+/* ACTIONS */
+.actions {
+  display: flex;
+  gap: 12px;
+  padding: 15px;
+  border-top: 1px solid #eee;
+}
+
+/* COMMON BUTTON */
+.actions button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 25px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  border: none;
+  transition: 0.2s ease;
+}
+
+/* EDIT BUTTON (SOFT BLUE) */
+.editBtn {
+  background: #eaf2ff;   /* light blue */
+  color: #2563eb;
+}
+
+/* DELETE BUTTON (SOFT RED) */
+.deleteBtn {
+  background: #fdecec;   /* light red */
+  color: #ef4444;
+}
+.actions i {
+  font-size: 16px;
+}
+.actions button:hover {
+  transform: translateY(-1px);
+}
+
+/* SUBTLE HOVER (NO COLOR CHANGE) */
+.actions button:hover {
+  transform: translateY(-1px);
+  opacity: 0.9;
+}
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+
+  /* HEADER STACK */
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  /* BUTTON FULL WIDTH */
+  .addBtn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* GRID → single column */
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* CARD */
+  .card {
+    border-radius: 14px;
+  }
+
+  /* IMAGE */
+  .imageWrapper {
+    height: 180px;
+  }
+
+  /* CONTENT */
+  .content {
+    padding: 12px;
+  }
+
+  .content h3 {
+    font-size: 16px;
+  }
+
+  /* ACTION BUTTONS STACK */
+  .actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .actions button {
+    width: 100%;
+  }
+}
+@media (max-width: 1024px) {
+  .container {
+    padding: 20px;
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .imageWrapper {
+    height: 190px;
+  }
+}

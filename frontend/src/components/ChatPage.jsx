@@ -1,4 +1,3 @@
-
 // import React, { useEffect, useState, useCallback } from "react";
 // import ChatSidebar from "../pages/ChatSidebar";
 // import ChatBox from "../pages/ChatBox";
@@ -38,8 +37,13 @@
 //   }, [user]);
 
 //   // ================= OPEN CHAT FROM URL =================
+//  const hasOpened = React.useRef(false);
+
 //   useEffect(() => {
 //     if (!userId || !isValidObjectId(userId)) return;
+//   if (hasOpened.current) return;
+
+//   hasOpened.current = true;
 
 //     const openChat = async () => {
 //       try {
@@ -118,7 +122,6 @@
 //   );
 // }
 
-
 import React, { useEffect, useState, useCallback } from "react";
 import ChatSidebar from "../pages/ChatSidebar";
 import ChatBox from "../pages/ChatBox";
@@ -130,10 +133,19 @@ import "../styles/Chat.css";
 export default function ChatPage() {
   const [conversations, setConversations] = useState([]);
   const [currentChat, setCurrentChat] = useState(null);
-
+const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
   const user = JSON.parse(localStorage.getItem("user"));
   const { userId } = useParams();
+const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
+useEffect(() => {
+  const handleResize = () => {
+    setIsMobile(window.innerWidth <= 768);
+  };
+
+  window.addEventListener("resize", handleResize);
+  return () => window.removeEventListener("resize", handleResize);
+}, []);
   const isValidObjectId = (id) =>
     /^[0-9a-fA-F]{24}$/.test(id);
 
@@ -231,14 +243,29 @@ export default function ChatPage() {
 
   // ================= UI =================
   return (
-    <div className="chat-page">
-      <ChatSidebar
-        conversations={conversations}
-        setCurrentChat={setCurrentChat}
-        user={user}
-        currentChat={currentChat}
-      />
-      <ChatBox currentChat={currentChat} user={user} />
-    </div>
+<div className="chat-page">
+
+  <ChatSidebar
+    conversations={conversations}
+    setCurrentChat={(chat) => {
+      setCurrentChat(chat);
+      if (isMobile) setIsMobileChatOpen(true);
+    }}
+    user={user}
+    currentChat={currentChat}
+    isMobileChatOpen={isMobileChatOpen}
+  />
+
+  {/* ✅ Desktop → always show */}
+  {/* ✅ Mobile → show only when open */}
+  {(!isMobile || isMobileChatOpen) && (
+    <ChatBox
+      currentChat={currentChat}
+      user={user}
+      setIsMobileChatOpen={setIsMobileChatOpen}
+    />
+  )}
+
+</div>
   );
 }

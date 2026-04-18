@@ -1,212 +1,9 @@
-// import React, { useEffect, useState } from "react";
-// import axios from "axios";
-// import { useParams, useNavigate } from "react-router-dom";
-
-// export default function EditRoom() {
-//   const { id } = useParams();
-//   const navigate = useNavigate();
-
-//   const [data, setData] = useState({
-//     title: "",
-//     description: "",
-//     price: "",
-//     address: "",
-//     lat: "",
-//     lng: "",
-//   });
-
-//   const [images, setImages] = useState([]);
-//   const [newImages, setNewImages] = useState([]);
-//   const [loading, setLoading] = useState(false);
-//   const [submitting, setSubmitting] = useState(false);
-
-//   /* ---------------- GET ROOM DATA ---------------- */
-//   useEffect(() => {
-//     fetchRoom();
-//     // eslint-disable-next-line
-//   }, [id]);
-
-//   const fetchRoom = async () => {
-//     try {
-//       setLoading(true);
-//       const res = await axios.get(`http://localhost:5000/api/rooms/${id}`);
-
-//       if (res.data.success) {
-//         const room = res.data.room;
-
-//         setData({
-//           title: room.title || "",
-//           description: room.description || "",
-//           price: room.price || "",
-//           address: room.location?.address || "",
-//           lat: room.location?.lat || "",
-//           lng: room.location?.lng || "",
-//         });
-
-//         setImages(room.images || []);
-//       }
-//     } catch (err) {
-//       console.error("Fetch room error:", err);
-//       alert("Failed to load room");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   /* ---------------- USE MY LOCATION ---------------- */
-//   const getMyLocation = () => {
-//     if (!navigator.geolocation) {
-//       alert("Geolocation not supported");
-//       return;
-//     }
-
-//     navigator.geolocation.getCurrentPosition(
-//       (position) => {
-//         setData((prev) => ({
-//           ...prev,
-//           lat: position.coords.latitude,
-//           lng: position.coords.longitude,
-//         }));
-//       },
-//       () => {
-//         alert("Location permission denied");
-//       }
-//     );
-//   };
-
-//   /* ---------------- HANDLE CHANGE ---------------- */
-//   const handleChange = (e) => {
-//     setData({ ...data, [e.target.name]: e.target.value });
-//   };
-
-//   /* ---------------- SUBMIT ---------------- */
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-
-//     if (!data.lat || !data.lng) {
-//       alert("Please use 'Use My Location'");
-//       return;
-//     }
-
-//     try {
-//       setSubmitting(true);
-
-//       const formData = new FormData();
-//       Object.keys(data).forEach((key) => {
-//         formData.append(key, data[key]);
-//       });
-
-//       if (newImages.length > 0) {
-//         for (let i = 0; i < newImages.length; i++) {
-//           formData.append("images", newImages[i]);
-//         }
-//       }
-
-//     const res = await axios.put(
-//   `http://localhost:5000/api/rooms/edit/${id}`,
-//   formData,
-//   {
-//     withCredentials: true, // 🔥
-//   }
-// );
-
-//       if (res.data.success) {
-//         alert("Room updated successfully!");
-//         navigate("/my-rooms");
-//       }
-//     } catch (err) {
-//       console.error("Update error:", err);
-//       alert("Update failed");
-//     } finally {
-//       setSubmitting(false);
-//     }
-//   };
-
-//   if (loading) return <h2>Loading...</h2>;
-
-//   /* ---------------- UI ---------------- */
-//   return (
-//     <form onSubmit={handleSubmit}>
-//       <h2>Edit Room</h2>
-
-//       <input
-//         name="title"
-//         value={data.title}
-//         onChange={handleChange}
-//         placeholder="Title"
-//         required
-//       />
-
-//       <textarea
-//         name="description"
-//         value={data.description}
-//         onChange={handleChange}
-//         placeholder="Description"
-//         required
-//       />
-
-//       <input
-//         name="price"
-//         type="number"
-//         value={data.price}
-//         onChange={handleChange}
-//         placeholder="Price"
-//         required
-//       />
-
-//       <input
-//         name="address"
-//         value={data.address}
-//         onChange={handleChange}
-//         placeholder="Address"
-//         required
-//       />
-
-//       <input
-//         name="lat"
-//         value={data.lat}
-//         onChange={handleChange}
-//         placeholder="Latitude"
-//         required
-//       />
-
-//       <input
-//         name="lng"
-//         value={data.lng}
-//         onChange={handleChange}
-//         placeholder="Longitude"
-//         required
-//       />
-
-//       <button type="button" onClick={getMyLocation}>
-//         📍 Use My Location
-//       </button>
-
-//       <div>
-//         <h4>Existing Images</h4>
-//         {images.map((img, i) => (
-//           <img key={i} src={img.url || img} alt="" width={120} />
-//         ))}
-//       </div>
-
-//       <input
-//         type="file"
-//         multiple
-//         onChange={(e) => setNewImages(e.target.files)}
-//       />
-
-//       <button type="submit" disabled={submitting}>
-//         {submitting ? "Updating..." : "Update Room"}
-//       </button>
-//     </form>
-//   );
-// }
-
-
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../utils/axios";
-
+import styles from "../styles/AddRoom.module.css"; // reuse same css
+import logo from "../assets/RoomEase.png";
+import Loader from "./Loader";
 export default function EditRoom() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -220,12 +17,12 @@ export default function EditRoom() {
     lng: "",
   });
 
-  const [images, setImages] = useState([]);
-  const [newImages, setNewImages] = useState([]);
+  const [images, setImages] = useState([]);       // existing
+  const [newImages, setNewImages] = useState([]); // new upload
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  // ================= FETCH ROOM =================
+  // ================= FETCH =================
   useEffect(() => {
     const fetchRoom = async () => {
       try {
@@ -246,7 +43,7 @@ export default function EditRoom() {
           setImages(room.images || []);
         }
       } catch (err) {
-        console.error("Fetch room error:", err);
+        console.error(err);
         alert("Failed to load room");
       } finally {
         setLoading(false);
@@ -256,38 +53,29 @@ export default function EditRoom() {
     fetchRoom();
   }, [id]);
 
-  // ================= LOCATION =================
-  const getMyLocation = () => {
-    if (!navigator.geolocation) {
-      alert("Geolocation not supported");
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setData((prev) => ({
-          ...prev,
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        }));
-      },
-      () => alert("Location permission denied")
-    );
-  };
-
   // ================= INPUT =================
   const handleChange = (e) => {
     setData({ ...data, [e.target.name]: e.target.value });
   };
 
+  const handleImages = (e) => {
+    setNewImages(Array.from(e.target.files));
+  };
+
+  // ================= LOCATION =================
+  const getMyLocation = () => {
+    navigator.geolocation.getCurrentPosition((pos) => {
+      setData((prev) => ({
+        ...prev,
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+      }));
+    });
+  };
+
   // ================= SUBMIT =================
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!data.lat || !data.lng) {
-      alert("Please use 'Use My Location'");
-      return;
-    }
 
     try {
       setSubmitting(true);
@@ -298,100 +86,142 @@ export default function EditRoom() {
         formData.append(key, data[key]);
       });
 
-      for (let i = 0; i < newImages.length; i++) {
-        formData.append("images", newImages[i]);
-      }
+      newImages.forEach((img) => {
+        formData.append("images", img);
+      });
 
       const res = await api.put(`/api/rooms/edit/${id}`, formData);
 
       if (res.data.success) {
-        alert("Room updated successfully!");
+        alert("Room updated!");
         navigate("/my-rooms");
       }
     } catch (err) {
-      console.error("Update error:", err);
+      console.error(err);
       alert("Update failed");
     } finally {
       setSubmitting(false);
     }
   };
+if (loading) return <Loader />;
 
-  if (loading) return <h2>Loading...</h2>;
-
-  // ================= UI =================
   return (
-    <form onSubmit={handleSubmit}>
-      <h2>Edit Room</h2>
-
-      <input
-        name="title"
-        value={data.title}
-        onChange={handleChange}
-        placeholder="Title"
-        required
-      />
-
-      <textarea
-        name="description"
-        value={data.description}
-        onChange={handleChange}
-        placeholder="Description"
-        required
-      />
-
-      <input
-        name="price"
-        type="number"
-        value={data.price}
-        onChange={handleChange}
-        placeholder="Price"
-        required
-      />
-
-      <input
-        name="address"
-        value={data.address}
-        onChange={handleChange}
-        placeholder="Address"
-        required
-      />
-
-      <input
-        name="lat"
-        value={data.lat}
-        onChange={handleChange}
-        placeholder="Latitude"
-        required
-      />
-
-      <input
-        name="lng"
-        value={data.lng}
-        onChange={handleChange}
-        placeholder="Longitude"
-        required
-      />
-
-      <button type="button" onClick={getMyLocation}>
-        📍 Use My Location
-      </button>
-
-      <div>
-        <h4>Existing Images</h4>
-        {images.map((img, i) => (
-          <img key={i} src={img.url} alt="" width={120} />
-        ))}
+    <div className={styles.container}>
+      
+      {/* HEADER */}
+      <div className={styles.header}>
+        <img src={logo} alt="logo" />
+        <h2>Edit Room</h2>
+        <p>Update your room details</p>
       </div>
 
-      <input
-        type="file"
-        multiple
-        onChange={(e) => setNewImages(e.target.files)}
-      />
+      <form className={styles.form} onSubmit={handleSubmit}>
 
-      <button type="submit" disabled={submitting}>
-        {submitting ? "Updating..." : "Update Room"}
-      </button>
-    </form>
+        <h3>Basic Information</h3>
+
+        {/* TITLE */}
+        <label>Room Title</label>
+        <div className={styles.inputBox}>
+          <i className="ri-home-4-line"></i>
+          <input
+            name="title"
+            value={data.title}
+            onChange={handleChange}
+          />
+        </div>
+
+        {/* DESCRIPTION */}
+        <label>Description</label>
+        <textarea
+          name="description"
+          value={data.description}
+          onChange={handleChange}
+        />
+
+        {/* ADDRESS */}
+        <label>Location</label>
+        <div className={styles.inputBox}>
+          <i className="ri-map-pin-line"></i>
+          <input
+            name="address"
+            value={data.address}
+            onChange={handleChange}
+          />
+        </div>
+
+        {/* PRICE */}
+        <h3>Pricing</h3>
+        <label>Price per Month</label>
+        <div className={styles.inputBox}>
+          <span>₹</span>
+          <input
+            name="price"
+            type="number"
+            value={data.price}
+            onChange={handleChange}
+          />
+        </div>
+
+        {/* LOCATION DETAILS */}
+        <h3>Location Details</h3>
+
+        <div className={styles.row}>
+          <div>
+            <label>Latitude</label>
+            <input name="lat" value={data.lat} onChange={handleChange} />
+          </div>
+
+          <div>
+            <label>Longitude</label>
+            <input name="lng" value={data.lng} onChange={handleChange} />
+          </div>
+        </div>
+
+        <button type="button" className={styles.locBtn} onClick={getMyLocation}>
+          📍 Use My Location
+        </button>
+
+        {/* EXISTING IMAGES */}
+        <h3>Existing Images</h3>
+        <div className={styles.previewContainer}>
+          {images.map((img, i) => (
+            <img key={i} src={img.url} className={styles.previewImg} />
+          ))}
+        </div>
+
+        {/* NEW UPLOAD */}
+        <h3>Upload New Images</h3>
+        <label className={styles.uploadBox}>
+          <input type="file" multiple onChange={handleImages} />
+          <i className="ri-image-line"></i>
+          <p>Upload new images</p>
+        </label>
+
+        {/* NEW PREVIEW */}
+        {newImages.length > 0 && (
+          <div className={styles.previewContainer}>
+            {newImages.map((img, i) => (
+              <img
+                key={i}
+                src={URL.createObjectURL(img)}
+                className={styles.previewImg}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* BUTTONS */}
+        <div className={styles.actions}>
+          <button type="button" className={styles.cancel} onClick={() => navigate(-1)}>
+            Cancel
+          </button>
+
+          <button type="submit" className={styles.submit}>
+            {submitting ? "Updating..." : "Update Room"}
+          </button>
+        </div>
+
+      </form>
+    </div>
   );
 }

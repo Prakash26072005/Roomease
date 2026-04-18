@@ -1,7 +1,10 @@
 .container {
   padding: 20px 40px;
+  background: #f9fafb;
+  min-height: 100vh;
 }
 
+/* BACK */
 .back {
   margin-bottom: 15px;
   cursor: pointer;
@@ -14,6 +17,7 @@
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 30px;
+  align-items: start;
 }
 
 /* LEFT */
@@ -21,71 +25,219 @@
   width: 100%;
 }
 
-/* RIGHT */
+/* RIGHT (STICKY FIX) */
 .right {
   position: sticky;
-  top: 100px;
-  height: fit-content;
+  top: 90px;
+  align-self: start;
 }
 
+/* CARD */
 .card {
-  border-radius: 12px;
-  padding: 20px;
   background: white;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
 }
 
 /* PRICE */
 .price {
   color: #2563eb;
-  font-size: 26px;
-  margin-bottom: 15px;
+  font-size: 28px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
 }
 
 .price span {
-  color: gray;
+  color: #6b7280;
   font-size: 14px;
+  font-weight: 500;
+}
+
+/* DIVIDER */
+.divider {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 15px 0;
+}
+
+/* LABEL */
+label {
+  font-weight: 500;
+  color: #374151;
 }
 
 /* INPUT */
 .input {
   width: 100%;
   padding: 12px;
-  margin: 10px 0;
-  border-radius: 8px;
-  border: 1px solid #ddd;
+  margin-top: 8px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  outline: none;
+  font-size: 14px;
+  transition: 0.2s;
 }
 
-/* BUTTONS */
+.input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+/* PAY BUTTON */
 .payBtn {
   width: 100%;
-  background: #2563eb;
+  margin-top: 18px;
+  padding: 13px;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
   color: white;
-  padding: 12px;
   border: none;
-  border-radius: 8px;
-  margin-top: 10px;
+  border-radius: 10px;
   cursor: pointer;
   font-weight: 600;
+  transition: all 0.3s ease;
 }
 
+.payBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+}
+
+/* CHAT BUTTON */
 .chatBtn {
   width: 100%;
-  margin-top: 10px;
+  margin-top: 12px;
   padding: 12px;
-  border: 1px solid #2563eb;
+  border: 2px solid #2563eb;
   background: white;
   color: #2563eb;
-  border-radius: 8px;
+  border-radius: 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.chatBtn i {
+  font-size: 18px;
+}
+
+.chatBtn:hover {
+  background: #2563eb;
+  color: white;
+  box-shadow: 0 6px 15px rgba(37, 99, 235, 0.3);
+  transform: translateY(-1px);
+}
+
+.chatBtn:active {
+  transform: scale(0.98);
 }
 
 /* NOTE */
 .note {
   text-align: center;
-  margin-top: 10px;
-  font-size: 12px;
+  margin-top: 15px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* DETAILS CARD */
+.detailsCard {
+  background: white;
+  padding: 20px;
+  margin-top: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+/* TITLE */
+.title {
+  font-size: 26px;
+  margin-bottom: 10px;
+}
+
+/* LOCATION */
+.location {
   color: gray;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* OWNER */
+.owner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 15px 0;
+}
+
+.owner i {
+  font-size: 24px;
+  background: #e0ecff;
+  padding: 10px;
+  border-radius: 50%;
+}
+
+/* SECTION */
+.section {
+  margin-top: 15px;
+}
+
+.section h3 {
+  margin-bottom: 5px;
+}
+
+/* MAP CARD */
+.mapCard {
+  background: white;
+  padding: 20px;
+  margin-top: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+/* MAP TITLE */
+.mapTitle {
+  font-size: 18px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* MAP */
+.mapIframe {
+  width: 100%;
+  height: 250px;
+  border: 0;
+  border-radius: 10px;
+}
+
+/* MAP LINK */
+.mapLink {
+  display: inline-block;
+  margin-top: 10px;
+  color: #2563eb;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.mapLink:hover {
+  text-decoration: underline;
+}
+
+/* RED ICON */
+.red {
+  color: rgb(242, 104, 104);
 }
 
 /* RESPONSIVE */
@@ -96,5 +248,42 @@
 
   .right {
     position: static;
+  }
+   .container {
+    padding: 15px;
+  }
+   .topSection {
+    gap: 20px;
+  }
+
+  .title {
+    font-size: 20px;
+  }
+  .card {
+    padding: 18px;
+  }
+
+  .detailsCard {
+    padding: 15px;
+  }
+
+  .mapCard {
+    padding: 15px;
+  }
+   .mapIframe {
+    height: 200px;
+  }
+  .payBtn,
+  .chatBtn {
+    padding: 14px;
+    font-size: 15px;
+  }
+  .owner {
+    gap: 8px;
+  }
+
+  .owner i {
+    padding: 8px;
+    font-size: 18px;
   }
 }

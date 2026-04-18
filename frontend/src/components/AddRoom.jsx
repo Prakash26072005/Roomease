@@ -1,124 +1,8 @@
-// import React, { useState } from "react";
-// import {  useNavigate } from "react-router-dom";
-// import api from "../utils/axios";
-// export default function AddRoom() {
-// const [data, setData] = useState({
-//   title: "",
-//   description: "",
-//   price: "",
-//   address: "",
-//   lat: "",
-//   lng: ""
-// });
-
-// const getMyLocation = () => {
-//   if (!navigator.geolocation) {
-//     alert("Geolocation is not supported by your browser");
-//     return;
-//   }
-
-//   navigator.geolocation.getCurrentPosition(
-//     (position) => {
-//       setData((prev) => ({
-//         ...prev,
-//         lat: position.coords.latitude,
-//         lng: position.coords.longitude,
-//       }));
-//     },
-//     (err) => {
-//       alert("Location permission denied");
-//     }
-//   );
-// };
-
-
-//   const [images, setImages] = useState([]);
-//     const navigate = useNavigate();
-
-//   const handleChange = (e) => {
-//     setData({ ...data, [e.target.name]: e.target.value });
-//   };
-
-//   const handleImages = (e) => {
-//     setImages(e.target.files);
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-
-//       // Basic validation
-//     if (!data.lat || !data.lng) {
-//       alert("Please click 'Use My Location' to get latitude & longitude");
-//       return;
-//     }
-
-   
-//     const formData = new FormData();
-
-//     Object.keys(data).forEach(key => {
-//       formData.append(key, data[key]);
-//     });
-
-//     for (let i = 0; i < images.length; i++) {
-//       formData.append("images", images[i]);
-//     }
-// const res = await fetch("http://localhost:5000/api/rooms/add", {
-//   method: "POST",
-//   credentials: "include", // 🔥 cookie auto send
-//   body: formData,
-// });
-
-//     const result = await res.json();
-//     console.log(result);
-
-//     if (result.success) {
-//       alert("Room added successfully!");
-//         navigate("/my-rooms");
-//     }
-//   };
-
-//   return (
-//     <form onSubmit={handleSubmit}>
-//       <input name="title" placeholder="Title" onChange={handleChange} required />
-//       <input name="description" placeholder="Description" onChange={handleChange} required />
-//       <input name="price" placeholder="Price" type="number" onChange={handleChange} required />
-//       <input
-//   name="address"
-//    placeholder="address"
-//   onChange={handleChange}
-//   required
-// />
-
-// <input
-//   name="lat"
-//   placeholder="Latitude (e.g. 23.7879)"
-//   onChange={handleChange}
-//   value={data.lat}
-//   required
-// />
-
-// <input
-//   name="lng"
-//   placeholder="Longitude (e.g. 84.444)"
-//   onChange={handleChange}
-//   value={data.lng}
-//   required
-// />
-// <button type="button" onClick={getMyLocation}>
-//   📍 Use My Location
-// </button>
-
-//       <input type="file" multiple onChange={handleImages} />
-
-//       <button type="submit">Add Room</button>
-//     </form>
-//   );
-// }
-
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../utils/axios";
+import styles from "../styles/AddRoom.module.css";
+import logo from "../assets/RoomEase.png";
 
 export default function AddRoom() {
   const navigate = useNavigate();
@@ -131,7 +15,7 @@ export default function AddRoom() {
     lat: "",
     lng: "",
   });
-
+const [loading, setLoading] = useState(false);
   const [images, setImages] = useState([]);
 
   const handleChange = (e) => {
@@ -139,97 +23,180 @@ export default function AddRoom() {
   };
 
   const handleImages = (e) => {
-    setImages(e.target.files);
+   setImages(Array.from(e.target.files));
   };
 
-  // 📍 AUTO LOCATION
   const getMyLocation = () => {
-    if (!navigator.geolocation) {
-      alert("Geolocation not supported");
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setData((prev) => ({
-          ...prev,
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        }));
-      },
-      () => {
-        alert("Location permission denied");
-      }
-    );
+    navigator.geolocation.getCurrentPosition((pos) => {
+      setData((prev) => ({
+        ...prev,
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+      }));
+    });
   };
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-  // 🚀 SUBMIT
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  try {
+    setLoading(true); // 🔥 START
 
-    if (!data.lat || !data.lng) {
-      alert("Please click 'Use My Location'");
-      return;
+    const formData = new FormData();
+    Object.keys(data).forEach((key) => {
+      formData.append(key, data[key]);
+    });
+
+    for (let i = 0; i < images.length; i++) {
+      formData.append("images", images[i]);
     }
 
-    try {
-      const formData = new FormData();
+    const res = await api.post("/api/rooms/add", formData);
 
-      Object.keys(data).forEach((key) => {
-        formData.append(key, data[key]);
-      });
-
-      for (let i = 0; i < images.length; i++) {
-        formData.append("images", images[i]);
-      }
-
-      const res = await api.post("/api/rooms/add", formData);
-
-      if (res.data.success) {
-        alert("Room added successfully!");
-        navigate("/my-rooms");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Failed to add room");
+    if (res.data.success) {
+      alert("Room added!");
+      navigate("/my-rooms");
     }
-  };
+  } catch (err) {
+    console.error(err);
+    alert("Failed to add room");
+  } finally {
+    setLoading(false); // 🔥 END
+  }
+};
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h2>Add Room</h2>
+    <div className={styles.container}>
+      
+      {/* HEADER */}
+      <div className={styles.header}>
+        <img src={logo} alt="logo" />
+        <h2>Add New Room</h2>
+        <p>Fill in the details to list your room</p>
+      </div>
 
-      <input name="title" placeholder="Title" onChange={handleChange} required />
+      {/* FORM CARD */}
+      <form className={styles.form} onSubmit={handleSubmit}>
+  {loading && (
+    <div className={styles.overlayLoader}>
+      <div className={styles.spinner}></div>
+    </div>
+  )}
+        <h3>Basic Information</h3>
 
-      <input name="description" placeholder="Description" onChange={handleChange} required />
+        {/* TITLE */}
+        <label>Room Title</label>
+        <div className={styles.inputBox}>
+          <i className="ri-home-4-line"></i>
+          <input
+            name="title"
+            placeholder="e.g., Cozy Studio in Downtown"
+            onChange={handleChange}
+            required
+          />
+        </div>
 
-      <input name="price" type="number" placeholder="Price" onChange={handleChange} required />
+        {/* DESCRIPTION */}
+        <label>Description</label>
+        <textarea
+          name="description"
+          placeholder="Describe your room..."
+          onChange={handleChange}
+          required
+        />
 
-      <input name="address" placeholder="Address" onChange={handleChange} required />
+        {/* LOCATION */}
+        <label>City / Location</label>
+        <div className={styles.inputBox}>
+          <i className="ri-map-pin-line"></i>
+          <input
+            name="address"
+            placeholder="e.g., Mumbai, Bangalore"
+            onChange={handleChange}
+            required
+          />
+        </div>
 
-      <input
-        name="lat"
-        placeholder="Latitude"
-        value={data.lat}
-        onChange={handleChange}
-        required
+        {/* PRICE */}
+        <h3>Pricing</h3>
+        <label>Price per Month</label>
+        <div className={styles.inputBox}>
+          <span>₹</span>
+          <input
+            name="price"
+            type="number"
+            placeholder="15000"
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        {/* LOCATION DETAILS */}
+        <h3>Location Details</h3>
+
+        <label>Full Address</label>
+        <div className={styles.inputBox}>
+          <i className="ri-map-pin-line"></i>
+          <input
+            name="address"
+            placeholder=" Street address, landmark"
+            onChange={handleChange}
+          />
+        </div>
+
+        <div className={styles.row}>
+          <div>
+            <label>Latitude</label>
+            <input name="lat" value={data.lat} onChange={handleChange} />
+          </div>
+
+          <div>
+            <label>Longitude</label>
+            <input name="lng" value={data.lng} onChange={handleChange} />
+          </div>
+        </div>
+
+        <button type="button" className={styles.locBtn} onClick={getMyLocation}>
+           <span className={styles.red}><i class="ri-map-pin-4-fill"></i></span> Use My Location
+        </button>
+
+        {/* IMAGE */}
+        <h3>Room Images</h3>
+        <label className={styles.uploadBox}>
+  <input
+    type="file"
+    multiple
+    onChange={handleImages}
+    accept="image/*"
+  />
+  <i className="ri-image-line"></i>
+  <p>Drag & drop images here, or click to browse</p>
+  <span>Support: JPG, PNG (max 5MB)</span>
+</label>
+{/* IMAGE PREVIEW */}
+{images.length > 0 && (
+  <div className={styles.previewContainer}>
+    {images.map((img, i) => (
+      <img
+        key={i}
+        src={URL.createObjectURL(img)}
+        alt="preview"
+        className={styles.previewImg}
       />
+    ))}
+  </div>
+)}
+        {/* BUTTONS */}
+        <div className={styles.actions}>
+          <button type="button" className={styles.cancel}>
+            Cancel
+          </button>
 
-      <input
-        name="lng"
-        placeholder="Longitude"
-        value={data.lng}
-        onChange={handleChange}
-        required
-      />
+        <button type="submit" className={styles.submit} disabled={loading}>
+  {loading ? "Adding..." : "Add Room"}
+</button>
+        </div>
 
-      <button type="button" onClick={getMyLocation}>
-        📍 Use My Location
-      </button>
-
-      <input type="file" multiple onChange={handleImages} />
-
-      <button type="submit">Add Room</button>
-    </form>
+      </form>
+    </div>
   );
 }

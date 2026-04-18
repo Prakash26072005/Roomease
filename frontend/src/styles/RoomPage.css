@@ -19,8 +19,8 @@
 /* GRID */
 .rooms-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 25px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
 }
 
 /* CARD */
@@ -143,4 +143,49 @@
 /* LOADING */
 .loading {
   padding: 20px;
+}
+
+@media (max-width: 768px) {
+  .rooms-page {
+    padding: 16px;
+  }
+    .rooms-grid {
+    grid-template-columns: 1fr;
+  }
+   .room-image-wrapper img {
+    height: 180px;
+  }
+   .room-card {
+    border-radius: 14px;
+  }
+
+  .room-content {
+    padding: 12px;
+  }
+   .room-content h3 {
+    font-size: 16px;
+  }
+
+  .desc {
+    font-size: 13px;
+  }
+
+  .location {
+    font-size: 13px;
+  }
+  .chat-btn {
+    padding: 8px 14px;
+    min-height: 36px;
+  }
+    .rooms-header h1 {
+    font-size: 22px;
+  }
+
+  .rooms-header p {
+    font-size: 14px;
+  }
+    .heart-icon {
+    padding: 6px;
+    font-size: 14px;
+  }
 }

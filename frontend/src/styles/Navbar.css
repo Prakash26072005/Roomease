@@ -123,13 +123,19 @@
 
 /* ICON BUTTONS */
 .icon-btn {
+  display: flex;              /* 🔥 FIX */
+  align-items: center;        /* vertical center */
+  justify-content: center;    /* horizontal center */
+
+  width: 36px;
+  height: 36px;
+
   background: transparent;
   border: none;
 
-  font-size: 24px; /* ✅ bigger icons */
   color: #374151;
-
   cursor: pointer;
+
   transition: 0.2s;
 }
 
@@ -138,6 +144,9 @@
   transform: scale(1.15);
 }
 
+.icon-text {
+  display: none;
+}
 /* PROFILE */
 .profile-box {
   position: relative;
@@ -148,7 +157,7 @@
   height: 38px;
 
   border-radius: 50%;
-  background: #0b74ff;
+  background: #afb7c1;
   color: white;
 
   display: flex;
@@ -160,37 +169,90 @@
   cursor: pointer;
 }
 
-/* DROPDOWN */
+.profile-name {
+  display: none;
+}
+/* DROPDOWN BOX */
 .dropdown {
   position: absolute;
-  top: 48px;
+  top: 55px;
   right: 0;
-
-  width: 190px;
-
-  background: white;
-  border-radius: 10px;
-  border: 1px solid #eee;
-
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  width: 200px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+  padding: 10px;
+  z-index: 100;
+  animation: fadeIn 0.2s ease;
 }
 
+/* HEADER */
 .dropdown-header {
-  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-weight: 600;
-  border-bottom: 1px solid #eee;
+  padding: 10px;
+  border-radius: 10px;
+  background: #f9fafb;
 }
 
+.dropdown-header i {
+  font-size: 18px;
+  color: #2563eb;
+}
+
+/* DIVIDER */
+.dropdown-divider {
+  height: 1px;
+  background: #eee;
+  margin: 8px 0;
+}
+
+/* ITEM */
 .dropdown-item {
-  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 10px;
   cursor: pointer;
+  transition: 0.2s;
+}
+
+/* ICON */
+.dropdown-item i {
+  font-size: 16px;
+  color: #2563eb;
+}
+
+/* TEXT */
+.dropdown-item span {
   font-size: 14px;
+  font-weight: 500;
 }
 
+/* HOVER */
 .dropdown-item:hover {
-  background: #f3f4f6;
+  background: #f1f5ff;
 }
 
+/* CLICK EFFECT */
+.dropdown-item:active {
+  transform: scale(0.96);
+}
+
+/* ANIMATION */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 /* LOGIN BUTTON */
 .login-btn {
   padding: 8px 16px;
@@ -212,4 +274,111 @@ i {
   font-size: 24px;
 
   cursor: pointer;
+}
+
+/* ================= MOBILE ================= */
+.menu-icon {
+  display: none;
+  font-size: 26px;
+  cursor: pointer;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+.icon-text {
+    display: inline;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .icon-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .navbar {
+    padding: 0 16px;
+  }
+
+  /* HIDE SEARCH */
+  .search-form {
+    display: none;
+  }
+
+  /* SHOW MENU ICON */
+  .menu-icon {
+    display: block;
+  }
+
+  /* RIGHT MENU (HIDDEN BY DEFAULT) */
+ .nav-right {
+    position: fixed;   /* 🔥 change from absolute */
+    top: 70px;
+    right: 0;
+
+    width:260px;      /* 🔥 full width */
+    height: calc(100vh - 70px);
+
+    background: white;
+
+    flex-direction: column;
+    align-items: flex-start;
+
+    padding: 20px;
+    gap: 15px;
+
+    z-index: 999;
+
+    transform: translateX(100%);
+    transition: 0.3s;
+  }
+
+  .nav-right.active {
+    transform: translateX(0);
+  }
+
+  /* ICON BUTTON FULL WIDTH */
+  .icon-btn {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 10px;
+  }
+
+  /* LOGIN BUTTON FULL */
+  .login-btn {
+    width: 100%;
+    text-align: left;
+  }
+
+  /* PROFILE FIX */
+  .profile-box {
+    width: 100%;
+  }
+ .profile-circle {
+    width: 100%;
+    border-radius: 8px;
+
+    justify-content: flex-start;
+    padding: 8px 10px;
+    gap: 10px;
+  }
+
+  .profile-name {
+    display: inline;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1f2937;
+  }
+   .menu-overlay {
+    position: fixed;
+    top: 70px;
+    left: 0;
+
+    width: 100%;
+    height: calc(100vh - 70px);
+
+    background: rgba(0,0,0,0.3);
+
+    z-index: 998;
+  }
 }

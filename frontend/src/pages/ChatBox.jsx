@@ -1,19 +1,25 @@
-
-// import "../styles/ChatBox.css"
-// import { useEffect, useState } from "react";
+// import "../styles/ChatBox.css";
+// import { useEffect, useState, useRef } from "react";
 // import api from "../utils/axios";
 // import { socket } from "../socket";
 // import MessageBubble from "./MessageBubble";
-// import SendIcon from '@mui/icons-material/Send';
-// import { useRef } from "react";
+// import SendIcon from "@mui/icons-material/Send";
+
 // export default function ChatBox({ currentChat, user }) {
 //   const [messages, setMessages] = useState([]);
 //   const [text, setText] = useState("");
-// const scrollRef = useRef();
+//   const scrollRef = useRef();
+
+//   // 🔥 get receiver
 //   const receiverId =
 //     currentChat?.members?.find(
 //       (m) => m?._id && m._id.toString() !== user._id.toString()
 //     )?._id;
+
+//   // 🔥 get other user (for header)
+//   const otherUser = currentChat?.members?.find(
+//     (m) => m?._id && m._id.toString() !== user._id.toString()
+//   );
 
 //   // ================= LOAD MESSAGES =================
 //   useEffect(() => {
@@ -42,10 +48,10 @@
 //     };
 //   }, [currentChat]);
 
+//   // ================= AUTO SCROLL =================
 //   useEffect(() => {
-//   scrollRef.current?.scrollIntoView({ behavior: "smooth" });
-// }, [messages]);
-
+//     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+//   }, [messages]);
 
 //   // ================= SEND MESSAGE =================
 //   const sendMessage = () => {
@@ -70,51 +76,66 @@
 //     setText("");
 //   };
 
+//   // 🔥 Enter to send
 //   const handleKeyDown = (e) => {
-//   if (e.key === "Enter") {
-//     sendMessage();
-//   }
-// };
+//     if (e.key === "Enter") {
+//       sendMessage();
+//     }
+//   };
 
 //   // ================= EMPTY STATE =================
 //   if (!currentChat || !currentChat.members) {
 //     return <h2>Select a chat</h2>;
 //   }
 
-  
 //   // ================= UI =================
-// return (
-//   <div className="chatbox">
-//     {/* MESSAGES */}
-//    <div className="chat-messages">
-//   {messages.map((m, i) => (
-//     <div
-//       key={m._id || i}
-//       ref={i === messages.length - 1 ? scrollRef : null}
-//     >
-//       <MessageBubble
-//         message={m}
-//         own={m.sender.toString() === user._id.toString()}
-//       />
-//     </div>
-//   ))}
-// </div>
+//   return (
+//     <div className="chatbox">
 
-//     {/* INPUT */}
-//     <div className="chat-input-area">
-//       <input
-//         value={text}
-//         onChange={(e) => setText(e.target.value)}
-//         placeholder="Type a message..."
-//         onKeyDown={handleKeyDown}
-//       />
+//       {/* 🔥 HEADER */}
+//       <div className="chat-header">
+//         <div className="chat-user">
+//           <div className="chat-avatar">
+//             {otherUser?.name?.charAt(0).toUpperCase() || "U"}
+//           </div>
 
-//       <button className="send-btn" onClick={sendMessage}>
-//         <SendIcon />
-//       </button>
+//           <div className="chat-user-info">
+//             <h3>{otherUser?.name || "User"}</h3>
+//             <span>Active now</span>
+//           </div>
+//         </div>
+//       </div>
+
+//       {/* 🔥 MESSAGES */}
+//       <div className="chat-messages">
+//         {messages.map((m, i) => (
+//           <div
+//             key={m._id || i}
+//             ref={i === messages.length - 1 ? scrollRef : null}
+//           >
+//             <MessageBubble
+//               message={m}
+//               own={m.sender.toString() === user._id.toString()}
+//             />
+//           </div>
+//         ))}
+//       </div>
+
+//       {/* 🔥 INPUT */}
+//       <div className="chat-input-area">
+//         <input
+//           value={text}
+//           onChange={(e) => setText(e.target.value)}
+//           placeholder="Type a message..."
+//           onKeyDown={handleKeyDown}
+//         />
+
+//         <button className="send-btn" onClick={sendMessage}>
+//           <SendIcon />
+//         </button>
+//       </div>
 //     </div>
-//   </div>
-// );
+//   );
 // }
 
 import "../styles/ChatBox.css";
@@ -124,7 +145,7 @@ import { socket } from "../socket";
 import MessageBubble from "./MessageBubble";
 import SendIcon from "@mui/icons-material/Send";
 
-export default function ChatBox({ currentChat, user }) {
+export default function ChatBox({ currentChat, user,setIsMobileChatOpen}) {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
   const scrollRef = useRef();
@@ -213,6 +234,12 @@ export default function ChatBox({ currentChat, user }) {
 
       {/* 🔥 HEADER */}
       <div className="chat-header">
+         <button 
+  className="back-btn"
+  onClick={() => setIsMobileChatOpen(false)}
+>
+  ←
+</button>
         <div className="chat-user">
           <div className="chat-avatar">
             {otherUser?.name?.charAt(0).toUpperCase() || "U"}
