@@ -129,7 +129,14 @@ export default function App() {
           }
         />
 
-        <Route path="/my-bookings" element={<MyBookings />} />
+        <Route
+  path="/my-bookings"
+  element={
+    <ProtectedRoute>
+      <MyBookings />
+    </ProtectedRoute>
+  }
+/>
         {/* <Route path="/chatpage" element={<ChatPage />} /> */}
    <Route
   path="/chatpage/:userId"

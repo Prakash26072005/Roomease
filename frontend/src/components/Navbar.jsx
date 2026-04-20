@@ -280,14 +280,13 @@ const handleLogout = async () => {
   const firstLetter = user?.name?.charAt(0).toUpperCase() || "U";
 
   // ================= SEARCH =================
-  const onSearch = (e) => {
-    e.preventDefault();
+const onSearch = (e) => {
+  e.preventDefault();
 
-    if (!query.trim()) return;
+  if (!query.trim()) return;
 
-    navigate(`/?search=${query}`);
-  };
-
+  navigate(`/?location=${query}`);
+};
   // ================= CHAT NAVIGATION =================
   const handleChatClick = () => {
     if (!user) {

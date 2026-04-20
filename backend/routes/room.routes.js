@@ -57,12 +57,39 @@ router.get("/my-rooms", verifyToken, async (req, res) => {
 
 
 /* ---------------------- GET ALL ROOMS ---------------------- */
+// router.get("/all", async (req, res) => {
+//   try {
+//     const rooms = await Room.find() .populate("owner", "name") .sort({ createdAt: -1 });
+//     res.json({ success: true, rooms });
+//   } catch (err) {
+//     res.status(500).json({ success: false, message: err.message });
+//   }
+// });
+
 router.get("/all", async (req, res) => {
   try {
-    const rooms = await Room.find() .populate("owner", "name") .sort({ createdAt: -1 });
+    const { location } = req.query;
+
+    let query = {};
+
+    // ✅ Apply search only if location is provided
+    if (location && location.trim() !== "") {
+      query = {
+        "location.address": {
+          $regex: location.trim(),
+          $options: "i", // case insensitive
+        },
+      };
+    }
+
+    const rooms = await Room.find(query)
+      .populate("owner", "name")
+      .sort({ createdAt: -1 });
+
     res.json({ success: true, rooms });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    console.error("SEARCH ERROR:", err);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 

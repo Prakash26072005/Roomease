@@ -13,6 +13,7 @@ import {
 import { verifyToken } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
+const CLIENT_URL = process.env.CLIENT_URL;
 
 /* ================= GOOGLE LOGIN ================= */
 router.get(
@@ -28,7 +29,7 @@ router.get(
   "/google/callback",
   passport.authenticate("google", {
     session: false,
-    failureRedirect: "http://localhost:5173/login",
+  failureRedirect: `${CLIENT_URL}/login`,
   }),
   (req, res) => {
     const user = req.user;
@@ -44,12 +45,12 @@ router.get(
       process.env.REFRESH_SECRET,
       { expiresIn: "7d" }
     );
-
-    const cookieOptions = {
-      httpOnly: true,
-      sameSite: "Lax",
-      secure: false,
-    };
+const isProd = process.env.NODE_ENV === "production";
+  const cookieOptions = {
+  httpOnly: true,
+  sameSite: isProd ? "None" : "Lax",
+  secure: isProd,
+};
 
     // ✅ ONLY THIS (correct)
     res.cookie("accessToken", accessToken, {
@@ -63,7 +64,7 @@ router.get(
     });
 
     // res.redirect("http://localhost:5173");
-    res.redirect("http://localhost:5173/google-success");
+    res.redirect(`${CLIENT_URL}/google-success`);
   }
 );
 
