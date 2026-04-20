@@ -122,7 +122,7 @@ const [loading, setLoading] = useState(true);
  useEffect(() => {
   const fetchRooms = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/rooms/my-rooms", {
+      const res = await fetch("api/rooms/my-rooms", {
         credentials: "include",
       });
 
@@ -145,7 +145,7 @@ const [loading, setLoading] = useState(true);
     if (!window.confirm("Delete this room?")) return;
 
     const res = await fetch(
-      `http://localhost:5000/api/rooms/delete/${id}`,
+      `api/rooms/delete/${id}`,
       {
         method: "DELETE",
         credentials: "include",
