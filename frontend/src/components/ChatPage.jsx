@@ -46,39 +46,58 @@ useEffect(() => {
   }, [user]);
 
   // ================= OPEN CHAT FROM URL =================
- const hasOpened = React.useRef(false);
+//  const hasOpened = React.useRef(false);
+
+  // useEffect(() => {
+  //   if (!userId || !isValidObjectId(userId)) return;
+  // if (hasOpened.current) return;
+
+  // hasOpened.current = true;
+
+  //   const openChat = async () => {
+  //     try {
+  //       const res = await api.post("/api/messages/conversation", {
+  //         receiverId: userId,
+  //       });
+
+  //       const newChat = res.data.conversation;
+
+  //       // 🔥 avoid duplicate in state
+  //       setConversations((prev) => {
+  //         const exists = prev.find(
+  //           (c) => String(c._id) === String(newChat._id)
+  //         );
+  //         if (exists) return prev;
+  //         return [newChat, ...prev];
+  //       });
+
+  //       setCurrentChat(newChat);
+  //     } catch (err) {
+  //       console.error(err);
+  //     }
+  //   };
+
+  //   openChat();
+  // }, [userId]);
 
   useEffect(() => {
-    if (!userId || !isValidObjectId(userId)) return;
-  if (hasOpened.current) return;
+  if (!userId || !isValidObjectId(userId)) return;
 
-  hasOpened.current = true;
+  // 🔥 existing conversation find karo
+  const existingChat = conversations.find((c) =>
+    c.members?.some(
+      (m) => m?._id?.toString() === userId.toString()
+    )
+  );
 
-    const openChat = async () => {
-      try {
-        const res = await api.post("/api/messages/conversation", {
-          receiverId: userId,
-        });
-
-        const newChat = res.data.conversation;
-
-        // 🔥 avoid duplicate in state
-        setConversations((prev) => {
-          const exists = prev.find(
-            (c) => String(c._id) === String(newChat._id)
-          );
-          if (exists) return prev;
-          return [newChat, ...prev];
-        });
-
-        setCurrentChat(newChat);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    openChat();
-  }, [userId]);
+  if (existingChat) {
+    setCurrentChat(existingChat);
+  } else {
+    console.log("No conversation exists with this user");
+    // optional:
+    // setCurrentChat(null);
+  }
+}, [userId, conversations]);
 
   // ================= SOCKET UPDATE =================
   useEffect(() => {
