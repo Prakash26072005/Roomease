@@ -115,6 +115,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "../styles/MyRooms.module.css";
 import Loader from "./Loader.jsx";
+import api from "../utils/axios";
 export default function MyRooms() {
   const [rooms, setRooms] = useState([]);
   const navigate = useNavigate();
@@ -122,42 +123,33 @@ const [loading, setLoading] = useState(true);
  useEffect(() => {
   const fetchRooms = async () => {
     try {
-      const res = await fetch("api/rooms/my-rooms", {
-        credentials: "include",
-      });
+      const res = await api.get("/api/rooms/my-rooms");
 
-      const data = await res.json();
-
-      if (data.success) {
-        setRooms(data.rooms);
+      if (res.data.success) {
+        setRooms(res.data.rooms);
       }
     } catch (err) {
       console.error(err);
     } finally {
-      setLoading(false); // 🔥 important
+      setLoading(false);
     }
   };
 
   fetchRooms();
 }, []);
+const deleteRoom = async (id) => {
+  if (!window.confirm("Delete this room?")) return;
 
-  const deleteRoom = async (id) => {
-    if (!window.confirm("Delete this room?")) return;
+  try {
+    const res = await api.delete(`/api/rooms/delete/${id}`);
 
-    const res = await fetch(
-      `api/rooms/delete/${id}`,
-      {
-        method: "DELETE",
-        credentials: "include",
-      }
-    );
-
-    const data = await res.json();
-
-    if (data.success) {
+    if (res.data.success) {
       setRooms((prev) => prev.filter((r) => r._id !== id));
     }
-  };
+  } catch (err) {
+    console.error(err);
+  }
+};
 
 
   const fallbackImage = "/fallback.jpg";

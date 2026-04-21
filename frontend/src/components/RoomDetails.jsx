@@ -62,7 +62,7 @@ useEffect(() => {
 const order = res.data.order; // ✅ FIX
 
       const options = {
-        key: "rzp_test_Rz1iDhnb8kUV4M",
+       key: import.meta.env.VITE_RAZORPAY_KEY,
         amount: order.amount,
         currency: "INR",
         name: "RoomEase",
