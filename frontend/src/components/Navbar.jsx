@@ -192,7 +192,8 @@ const onSearch = (e) => {
     {/* HEADER */}
     <div className="dropdown-header">
       <i className="ri-user-3-line"></i>
-      <span>{user.name}</span>
+      {/* change */}
+      <span>{user.name}</span><i class="ri-arrow-down-line"></i>
     </div>
 
     <div className="dropdown-divider"></div>
