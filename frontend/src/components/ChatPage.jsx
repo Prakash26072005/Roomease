@@ -125,23 +125,11 @@ export default function ChatPage() {
   }, []);
 
   // ================= DEFAULT SELECT =================
-  // useEffect(() => {
-  //   if (!userId && conversations.length > 0) {
-  //     setCurrentChat(conversations[0]);
-  //   }
-  // }, [conversations, userId]);
- useEffect(() => {
-  if (!userId && conversations.length > 0) {
-    if (!isMobile) {
-      // 💻 Desktop
+  useEffect(() => {
+    if (!userId && conversations.length > 0) {
       setCurrentChat(conversations[0]);
-    } else {
-      // 📱 Mobile
-      setCurrentChat(null);
-      setIsMobileChatOpen(false); // 🔥 MOST IMPORTANT FIX
     }
-  }
-}, [conversations, userId, isMobile]);
+  }, [conversations, userId]);
 
   // ================= UI =================
   return (
@@ -159,28 +147,14 @@ export default function ChatPage() {
       />
 
       {/* Desktop always show | Mobile only when open */}
-      {/* {(!isMobile || isMobileChatOpen) && (
+      {(!isMobile || isMobileChatOpen) && (
         <ChatBox
           currentChat={currentChat}
           user={user}
           setIsMobileChatOpen={setIsMobileChatOpen}
         />
-      )} */}
-{isMobile ? (
-  isMobileChatOpen && (
-    <ChatBox
-      currentChat={currentChat}
-      user={user}
-      setIsMobileChatOpen={setIsMobileChatOpen}
-    />
-  )
-) : (
-  <ChatBox
-    currentChat={currentChat}
-    user={user}
-    setIsMobileChatOpen={setIsMobileChatOpen}
-  />
-)}
+      )}
+
     </div>
   );
 }
