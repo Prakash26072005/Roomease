@@ -165,9 +165,7 @@ if (loading) {
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      navigate(
-                        `/chatpage/${room.owner?._id}`
-                      );
+                     navigate(`/chatpage/${room.owner._id}`);
                     }}
                   >
                     <BiChat /> Chat

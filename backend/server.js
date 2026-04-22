@@ -20,14 +20,12 @@
 // dotenv.config();
 
 // const app = express();
-
+// const CLIENT_URL = process.env.CLIENT_URL;
 // /* ================= MIDDLEWARE ================= */
-// app.use(
-//   cors({
-//     origin: "http://localhost:5173",
-//     credentials: true,
-//   })
-// );
+// app.use(cors({
+//   origin: CLIENT_URL,
+//   credentials: true,
+// }));
 
 // app.use(express.json());
 // app.use(cookieParser());
@@ -52,8 +50,8 @@
 // /* ================= SOCKET ================= */
 // const io = new Server(server, {
 //   cors: {
-//     origin: "http://localhost:5173",
-//     methods: ["GET", "POST"], // 🔥 ADD THIS
+//     origin: CLIENT_URL,
+//     methods: ["GET", "POST"],
 //     credentials: true,
 //   },
 // });
@@ -140,7 +138,6 @@
 // server.listen(port, () => {
 //   console.log(`🚀 Server running on port ${port}`);
 // });
-
 import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
@@ -222,7 +219,9 @@ io.on("connection", (socket) => {
 
       try {
         // 1️⃣ find existing
-        convo = await Conversation.findOne({ members });
+       convo = await Conversation.findOne({
+  members: { $all: members, $size: 2 },
+});
 
         // 2️⃣ create if not exists
         if (!convo) {
@@ -231,7 +230,9 @@ io.on("connection", (socket) => {
       } catch (err) {
         // 🔥 handle duplicate key error
         if (err.code === 11000) {
-          convo = await Conversation.findOne({ members });
+         convo = await Conversation.findOne({
+  members: { $all: members, $size: 2 },
+});
         } else {
           throw err;
         }

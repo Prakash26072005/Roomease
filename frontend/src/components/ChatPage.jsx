@@ -9,19 +9,24 @@ import "../styles/Chat.css";
 export default function ChatPage() {
   const [conversations, setConversations] = useState([]);
   const [currentChat, setCurrentChat] = useState(null);
-const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
+  const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
+
   const user = JSON.parse(localStorage.getItem("user"));
   const { userId } = useParams();
-const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
-useEffect(() => {
-  const handleResize = () => {
-    setIsMobile(window.innerWidth <= 768);
-  };
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
-  window.addEventListener("resize", handleResize);
-  return () => window.removeEventListener("resize", handleResize);
-}, []);
+  // ================= MOBILE DETECT =================
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // ================= VALID OBJECT ID =================
   const isValidObjectId = (id) =>
     /^[0-9a-fA-F]{24}$/.test(id);
 
@@ -46,14 +51,21 @@ useEffect(() => {
   }, [user]);
 
   // ================= OPEN CHAT FROM URL =================
- const hasOpened = React.useRef(false);
-
   useEffect(() => {
     if (!userId || !isValidObjectId(userId)) return;
-  if (hasOpened.current) return;
 
-  hasOpened.current = true;
+    // 🔥 check if already exists
+    const existing = conversations.find((c) =>
+      c.members?.some((m) => String(m._id) === String(userId))
+    );
 
+    if (existing) {
+      setCurrentChat(existing);
+      if (isMobile) setIsMobileChatOpen(true);
+      return;
+    }
+
+    // 🔥 otherwise create conversation
     const openChat = async () => {
       try {
         const res = await api.post("/api/messages/conversation", {
@@ -62,7 +74,6 @@ useEffect(() => {
 
         const newChat = res.data.conversation;
 
-        // 🔥 avoid duplicate in state
         setConversations((prev) => {
           const exists = prev.find(
             (c) => String(c._id) === String(newChat._id)
@@ -72,15 +83,14 @@ useEffect(() => {
         });
 
         setCurrentChat(newChat);
+        if (isMobile) setIsMobileChatOpen(true);
       } catch (err) {
         console.error(err);
       }
     };
 
     openChat();
-  }, [userId]);
-
- 
+  }, [userId, conversations, isMobile]);
 
   // ================= SOCKET UPDATE =================
   useEffect(() => {
@@ -95,12 +105,14 @@ useEffect(() => {
         if (index !== -1) {
           updated[index].lastMessage = msg.text;
 
+          // 🔥 move to top
           const [chat] = updated.splice(index, 1);
           updated.unshift(chat);
         }
 
         return updated;
       });
+      fetchConversations();
     };
 
     socket.on("receiveMessage", handleNewMessage);
@@ -121,29 +133,28 @@ useEffect(() => {
 
   // ================= UI =================
   return (
-<div className="chat-page">
+    <div className="chat-page">
 
-  <ChatSidebar
-    conversations={conversations}
-    setCurrentChat={(chat) => {
-      setCurrentChat(chat);
-      if (isMobile) setIsMobileChatOpen(true);
-    }}
-    user={user}
-    currentChat={currentChat}
-    isMobileChatOpen={isMobileChatOpen}
-  />
+      <ChatSidebar
+        conversations={conversations}
+        setCurrentChat={(chat) => {
+          setCurrentChat(chat);
+          if (isMobile) setIsMobileChatOpen(true);
+        }}
+        user={user}
+        currentChat={currentChat}
+        isMobileChatOpen={isMobileChatOpen}
+      />
 
-  {/* ✅ Desktop → always show */}
-  {/* ✅ Mobile → show only when open */}
-  {(!isMobile || isMobileChatOpen) && (
-    <ChatBox
-      currentChat={currentChat}
-      user={user}
-      setIsMobileChatOpen={setIsMobileChatOpen}
-    />
-  )}
+      {/* Desktop always show | Mobile only when open */}
+      {(!isMobile || isMobileChatOpen) && (
+        <ChatBox
+          currentChat={currentChat}
+          user={user}
+          setIsMobileChatOpen={setIsMobileChatOpen}
+        />
+      )}
 
-</div>
+    </div>
   );
 }

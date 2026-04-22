@@ -31,22 +31,28 @@ export default function ChatBox({ currentChat, user,setIsMobileChatOpen}) {
   }, [currentChat]);
 
   // ================= SOCKET LISTEN =================
-  useEffect(() => {
-    const handleReceive = (msg) => {
-      if (
-        msg.conversationId.toString() ===
-        currentChat?._id.toString()
-      ) {
-        setMessages((prev) => [...prev, msg]);
-      }
-    };
+useEffect(() => {
+  const handleReceive = (msg) => {
+    if (
+      msg.conversationId.toString() ===
+      currentChat?._id.toString()
+    ) {
+      setMessages((prev) => {
+        const exists = prev.find((m) => m._id === msg._id);
+        if (exists) return prev;
+        return [...prev, msg];
+      });
+    }
+  };
 
-    socket.on("receiveMessage", handleReceive);
+  socket.on("receiveMessage", handleReceive);
+  socket.on("messageSent", handleReceive);
 
-    return () => {
-      socket.off("receiveMessage", handleReceive);
-    };
-  }, [currentChat]);
+  return () => {
+    socket.off("receiveMessage", handleReceive);
+    socket.off("messageSent", handleReceive);
+  };
+}, [currentChat]);
 
   // ================= AUTO SCROLL =================
   useEffect(() => {
