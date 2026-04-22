@@ -183,7 +183,7 @@ const onSearch = (e) => {
   {firstLetter}
 
   {/* ✅ Add this */}
-  <span className="profile-name">{user?.name}</span>
+  <span className="profile-name">{user?.name}</span><i class="ri-arrow-down-line"></i>
 </div>
 
            {showProfile && (
@@ -192,8 +192,8 @@ const onSearch = (e) => {
     {/* HEADER */}
     <div className="dropdown-header">
       <i className="ri-user-3-line"></i>
-      {/* change */}
-      <span>{user.name}</span><i class="ri-arrow-down-line"></i>
+  
+      <span>{user.name}</span>
     </div>
 
     <div className="dropdown-divider"></div>
