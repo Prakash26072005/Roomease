@@ -183,7 +183,7 @@ const onSearch = (e) => {
   {firstLetter}
 
   {/* ✅ Add this */}
-  <span className="profile-name">{user?.name}</span><i class="ri-arrow-down-line"></i>
+  <span className="profile-name">{user?.name}</span><span><i class="ri-arrow-down-line"></i></span>
 </div>
 
            {showProfile && (

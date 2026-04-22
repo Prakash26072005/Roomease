@@ -283,6 +283,10 @@ i {
   cursor: pointer;
 }
 
+.ri-arrow-down-line {
+  font-size: 14px;  /* 🔥 size control */
+}
+
 /* MOBILE */
 @media (max-width: 768px) {
 .icon-text {
