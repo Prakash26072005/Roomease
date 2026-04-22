@@ -130,14 +130,15 @@ export default function ChatPage() {
   //     setCurrentChat(conversations[0]);
   //   }
   // }, [conversations, userId]);
-  useEffect(() => {
+ useEffect(() => {
   if (!userId && conversations.length > 0) {
     if (!isMobile) {
-      // 💻 Desktop → auto open first chat
+      // 💻 Desktop
       setCurrentChat(conversations[0]);
     } else {
-      // 📱 Mobile → sidebar hi open rahe
+      // 📱 Mobile
       setCurrentChat(null);
+      setIsMobileChatOpen(false); // 🔥 MOST IMPORTANT FIX
     }
   }
 }, [conversations, userId, isMobile]);
