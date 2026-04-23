@@ -118,7 +118,7 @@ export default function ChatSidebar({
                 if (!otherUser?._id) return;
 
                 setCurrentChat(c);
-                navigate(`/chatpage/${otherUser._id}`, { replace: true });
+                navigate(`/chatpage/${otherUser._id}`);
               }}
             >
               {/* AVATAR */}

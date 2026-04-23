@@ -218,44 +218,50 @@ export default function ChatPage() {
   // ================= OPEN / CREATE CHAT =================
 // Inside ChatPage.jsx - fix the dependency and logic
 useEffect(() => {
-  // 1. Safety check
   if (!userId || !isValidObjectId(userId)) return;
-  
-  // 2. Wait for conversations to finish loading
-  if (loadingConversations) return; 
+  if (loadingConversations) return;
+
+  // ❌ prevent self chat
+  if (user && String(user._id) === String(userId)) return;
 
   const openChat = async () => {
     try {
-      // 3. Null-safe search (using optional chaining ?. and default empty array)
-      const existing = (conversations || []).find((c) =>
-        c?.members?.some((m) => m && String(m._id) === String(userId))
+      // ✅ find existing conversation
+      const existing = conversations.find((c) =>
+        c.members?.some(
+          (m) => m && String(m._id) === String(userId)
+        )
       );
 
       if (existing) {
         setCurrentChat(existing);
-      } else {
-        // Prevent chatting with yourself
-        if (user && String(user._id) === String(userId)) return;
 
-        const res = await api.post("/api/messages/conversation", {
-          receiverId: userId,
-        });
+        // 🔥 mobile open
+        if (isMobile) setIsMobileChatOpen(true);
 
-        if (res.data.success) {
-          const newChat = res.data.conversation;
-          setConversations((prev) => [newChat, ...prev]);
-          setCurrentChat(newChat);
-        }
+        return;
       }
 
-      if (isMobile) setIsMobileChatOpen(true);
+      // ✅ create new conversation
+      const res = await api.post("/api/messages/conversation", {
+        receiverId: userId,
+      });
+
+      if (res.data.success) {
+        const newChat = res.data.conversation;
+
+        setConversations((prev) => [newChat, ...prev]);
+        setCurrentChat(newChat);
+
+        if (isMobile) setIsMobileChatOpen(true);
+      }
     } catch (err) {
       console.error("Error opening chat:", err);
     }
   };
 
   openChat();
-}, [userId, loadingConversations, (conversations || []).length]);
+}, [userId, loadingConversations, conversations]);
   // ================= SOCKET UPDATE =================
   useEffect(() => {
     const handleNewMessage = (msg) => {
@@ -309,23 +315,23 @@ useEffect(() => {
       />
 
       {/* Desktop always show | Mobile only when open */}
-      {isMobile ? (
-        isMobileChatOpen && currentChat && (
-          <ChatBox
-            currentChat={currentChat}
-            user={user}
-            setIsMobileChatOpen={setIsMobileChatOpen}
-          />
-        )
-      ) : (
-        currentChat && (
-          <ChatBox
-            currentChat={currentChat}
-            user={user}
-            setIsMobileChatOpen={setIsMobileChatOpen}
-          />
-        )
-      )}
+     {isMobile ? (
+  isMobileChatOpen ? (
+    <ChatBox
+      currentChat={currentChat}
+      user={user}
+      setIsMobileChatOpen={setIsMobileChatOpen}
+    />
+  ) : null
+) : (
+  currentChat && (
+    <ChatBox
+      currentChat={currentChat}
+      user={user}
+      setIsMobileChatOpen={setIsMobileChatOpen}
+    />
+  )
+)}
     </div>
   );
 }
