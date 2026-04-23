@@ -158,7 +158,6 @@
 //     </div>
 //   );
 // }
-
 import React, { useEffect, useState, useCallback } from "react";
 import ChatSidebar from "../pages/ChatSidebar";
 import ChatBox from "../pages/ChatBox";
@@ -171,7 +170,8 @@ export default function ChatPage() {
   const [conversations, setConversations] = useState([]);
   const [currentChat, setCurrentChat] = useState(null);
   const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
-const [loadingConversations, setLoadingConversations] = useState(true);
+  const [loadingConversations, setLoadingConversations] = useState(true);
+
   const user = JSON.parse(localStorage.getItem("user"));
   const { userId } = useParams();
 
@@ -183,6 +183,7 @@ const [loadingConversations, setLoadingConversations] = useState(true);
       setIsMobile(window.innerWidth <= 768);
     };
 
+    handleResize(); // 🔥 important
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -192,16 +193,17 @@ const [loadingConversations, setLoadingConversations] = useState(true);
     /^[0-9a-fA-F]{24}$/.test(id);
 
   // ================= LOAD CONVERSATIONS =================
-const fetchConversations = useCallback(async () => {
-  try {
-    const res = await api.get("/api/messages/conversations/my");
-    setConversations(res.data.conversations);
-  } catch (err) {
-    console.error(err);
-  } finally {
-    setLoadingConversations(false); // 🔥 important
-  }
-}, []);
+  const fetchConversations = useCallback(async () => {
+    try {
+      const res = await api.get("/api/messages/conversations/my");
+      setConversations(res.data.conversations);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingConversations(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchConversations();
   }, [fetchConversations]);
@@ -212,41 +214,52 @@ const fetchConversations = useCallback(async () => {
     socket.emit("join", user._id);
   }, [user]);
 
-  // ================= OPEN CHAT FROM URL =================
- useEffect(() => {
-  if (!userId || !isValidObjectId(userId)) return;
+  // ================= SELECT EXISTING CHAT =================
+  useEffect(() => {
+    if (!userId || !isValidObjectId(userId)) return;
 
-  // 🔥 WAIT only until loading
-  if (loadingConversations) return;
+    const existing = conversations.find((c) =>
+      c.members?.some((m) => String(m._id) === String(userId))
+    );
 
-  const existing = conversations.find((c) =>
-    c.members?.some((m) => String(m._id) === String(userId))
-  );
-
-  if (existing) {
-    setCurrentChat(existing);
-    if (isMobile) setIsMobileChatOpen(true);
-    return;
-  }
-
-  const openChat = async () => {
-    try {
-      const res = await api.post("/api/messages/conversation", {
-        receiverId: userId,
-      });
-
-      const newChat = res.data.conversation;
-
-      setConversations((prev) => [newChat, ...prev]);
-      setCurrentChat(newChat);
+    if (existing) {
+      setCurrentChat(existing);
       if (isMobile) setIsMobileChatOpen(true);
-    } catch (err) {
-      console.error(err);
     }
-  };
+  }, [userId, conversations, isMobile]);
 
-  openChat();
-}, [userId, conversations, isMobile, loadingConversations]);  // ================= SOCKET UPDATE =================
+  // ================= CREATE CHAT (ONLY ONCE) =================
+  useEffect(() => {
+    if (!userId || !isValidObjectId(userId)) return;
+    if (loadingConversations) return;
+
+    const existing = conversations.find((c) =>
+      c.members?.some((m) => String(m._id) === String(userId))
+    );
+
+    if (existing) return;
+
+    const createChat = async () => {
+      try {
+        const res = await api.post("/api/messages/conversation", {
+          receiverId: userId,
+        });
+
+        const newChat = res.data.conversation;
+
+        setConversations((prev) => [newChat, ...prev]);
+        setCurrentChat(newChat);
+
+        if (isMobile) setIsMobileChatOpen(true);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    createChat();
+  }, [userId, loadingConversations]); // 🔥 IMPORTANT
+
+  // ================= SOCKET UPDATE =================
   useEffect(() => {
     const handleNewMessage = (msg) => {
       setConversations((prev) => {
@@ -259,14 +272,13 @@ const fetchConversations = useCallback(async () => {
         if (index !== -1) {
           updated[index].lastMessage = msg.text;
 
-          // 🔥 move to top
+          // move to top
           const [chat] = updated.splice(index, 1);
           updated.unshift(chat);
         }
 
         return updated;
       });
-      fetchConversations();
     };
 
     socket.on("receiveMessage", handleNewMessage);
@@ -278,12 +290,12 @@ const fetchConversations = useCallback(async () => {
     };
   }, []);
 
-  // ================= DEFAULT SELECT =================
-useEffect(() => {
-  if (!userId && conversations.length > 0 && !isMobile) {
-    setCurrentChat(conversations[0]);
-  }
-}, [conversations, userId, isMobile]);
+  // ================= DEFAULT SELECT (DESKTOP ONLY) =================
+  useEffect(() => {
+    if (!userId && conversations.length > 0 && !isMobile) {
+      setCurrentChat(conversations[0]);
+    }
+  }, [conversations, userId, isMobile]);
 
   // ================= UI =================
   return (
@@ -301,14 +313,21 @@ useEffect(() => {
       />
 
       {/* Desktop always show | Mobile only when open */}
-      {(!isMobile || isMobileChatOpen) && (
+      {isMobile ? (
+        isMobileChatOpen && (
+          <ChatBox
+            currentChat={currentChat}
+            user={user}
+            setIsMobileChatOpen={setIsMobileChatOpen}
+          />
+        )
+      ) : (
         <ChatBox
           currentChat={currentChat}
           user={user}
           setIsMobileChatOpen={setIsMobileChatOpen}
         />
       )}
-
     </div>
   );
 }

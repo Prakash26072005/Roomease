@@ -13,7 +13,12 @@ export default function MessageBubble({ message, own }) {
           color: own ? "#fff" : "#000",
           padding: "10px",
           borderRadius: "10px",
-          maxWidth: "60%",
+          maxWidth: "70%",
+
+          // 🔥 MAIN FIX
+          wordBreak: "break-word",
+          overflowWrap: "break-word",
+          whiteSpace: "pre-wrap",
         }}
       >
         {message.text}
