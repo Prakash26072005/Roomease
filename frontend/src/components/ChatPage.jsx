@@ -158,6 +158,7 @@
 //     </div>
 //   );
 // }
+
 import React, { useEffect, useState, useCallback } from "react";
 import ChatSidebar from "../pages/ChatSidebar";
 import ChatBox from "../pages/ChatBox";
@@ -183,7 +184,7 @@ export default function ChatPage() {
       setIsMobile(window.innerWidth <= 768);
     };
 
-    handleResize(); // 🔥 important
+    handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -214,21 +215,7 @@ export default function ChatPage() {
     socket.emit("join", user._id);
   }, [user]);
 
-  // ================= SELECT EXISTING CHAT =================
-  useEffect(() => {
-    if (!userId || !isValidObjectId(userId)) return;
-
-    const existing = conversations.find((c) =>
-      c.members?.some((m) => String(m._id) === String(userId))
-    );
-
-    if (existing) {
-      setCurrentChat(existing);
-      if (isMobile) setIsMobileChatOpen(true);
-    }
-  }, [userId, conversations, isMobile]);
-
-  // ================= CREATE CHAT (ONLY ONCE) =================
+  // ================= OPEN / CREATE CHAT =================
   useEffect(() => {
     if (!userId || !isValidObjectId(userId)) return;
     if (loadingConversations) return;
@@ -237,18 +224,20 @@ export default function ChatPage() {
       c.members?.some((m) => String(m._id) === String(userId))
     );
 
-    if (existing) return;
-
-    const createChat = async () => {
+    const openChat = async () => {
       try {
-        const res = await api.post("/api/messages/conversation", {
-          receiverId: userId,
-        });
+        if (existing) {
+          setCurrentChat(existing);
+        } else {
+          const res = await api.post("/api/messages/conversation", {
+            receiverId: userId,
+          });
 
-        const newChat = res.data.conversation;
+          const newChat = res.data.conversation;
 
-        setConversations((prev) => [newChat, ...prev]);
-        setCurrentChat(newChat);
+          setConversations((prev) => [newChat, ...prev]);
+          setCurrentChat(newChat);
+        }
 
         if (isMobile) setIsMobileChatOpen(true);
       } catch (err) {
@@ -256,8 +245,8 @@ export default function ChatPage() {
       }
     };
 
-    createChat();
-  }, [userId, loadingConversations]); // 🔥 IMPORTANT
+    openChat();
+  }, [userId, loadingConversations]);
 
   // ================= SOCKET UPDATE =================
   useEffect(() => {
@@ -272,7 +261,6 @@ export default function ChatPage() {
         if (index !== -1) {
           updated[index].lastMessage = msg.text;
 
-          // move to top
           const [chat] = updated.splice(index, 1);
           updated.unshift(chat);
         }
@@ -314,7 +302,7 @@ export default function ChatPage() {
 
       {/* Desktop always show | Mobile only when open */}
       {isMobile ? (
-        isMobileChatOpen && (
+        isMobileChatOpen && currentChat && (
           <ChatBox
             currentChat={currentChat}
             user={user}
@@ -322,11 +310,13 @@ export default function ChatPage() {
           />
         )
       ) : (
-        <ChatBox
-          currentChat={currentChat}
-          user={user}
-          setIsMobileChatOpen={setIsMobileChatOpen}
-        />
+        currentChat && (
+          <ChatBox
+            currentChat={currentChat}
+            user={user}
+            setIsMobileChatOpen={setIsMobileChatOpen}
+          />
+        )
       )}
     </div>
   );

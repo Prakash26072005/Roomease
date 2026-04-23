@@ -64,16 +64,18 @@ router.post("/send", verifyToken, async (req, res) => {
     let convo;
 
     try {
-     let convo = await Conversation.findOne({
-  members: { $all: members, $size: 2 },
-});
+      convo = await Conversation.findOne({
+        members: { $all: members, $size: 2 },
+      });
 
       if (!convo) {
         convo = await Conversation.create({ members });
       }
     } catch (err) {
       if (err.code === 11000) {
-        convo = await Conversation.findOne({ members });
+        convo = await Conversation.findOne({
+          members: { $all: members, $size: 2 },
+        });
       } else {
         throw err;
       }
