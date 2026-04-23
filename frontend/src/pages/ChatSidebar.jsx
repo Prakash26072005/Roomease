@@ -12,6 +12,7 @@ export default function ChatSidebar({
 
   return (
     <div className={`chat-sidebar ${isMobileChatOpen ? "hide" : ""}`}>
+      
       {/* HEADER */}
       <div className="sidebar-header">
         <h2>Messages</h2>
@@ -26,10 +27,17 @@ export default function ChatSidebar({
 
       {/* LIST */}
       <div className="chat-list">
-        {conversations.map((c) => {
-          // 🔥 SAFE otherUser FIND
-          const otherUser = c.members?.find(
-            (m) => m?._id && m._id.toString() !== user?._id?.toString()
+        {conversations?.map((c) => {
+          
+          // 🔥 FULL SAFETY
+          if (!c || !c.members) return null;
+
+          const otherUser = c.members.find(
+            (m) =>
+              m &&
+              m._id &&
+              user &&
+              m._id.toString() !== user._id?.toString()
           );
 
           return (
@@ -39,15 +47,15 @@ export default function ChatSidebar({
                 currentChat?._id === c._id ? "active" : ""
               }`}
               onClick={() => {
-                if (!otherUser?._id) return; // 🔥 prevent crash
+                if (!otherUser?._id) return;
 
                 setCurrentChat(c);
-                navigate(`/chatpage/${otherUser._id}`,{ replace: true });
+                navigate(`/chatpage/${otherUser._id}`, { replace: true });
               }}
             >
               {/* AVATAR */}
               <div className="avatar">
-                {otherUser?.name?.charAt(0).toUpperCase() || "U"}
+                {otherUser?.name?.charAt(0)?.toUpperCase() || "U"}
               </div>
 
               {/* INFO */}
