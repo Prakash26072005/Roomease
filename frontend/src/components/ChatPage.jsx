@@ -218,27 +218,36 @@ export default function ChatPage() {
   // ================= OPEN / CREATE CHAT =================
 // Inside ChatPage.jsx - fix the dependency and logic
 useEffect(() => {
+  // 1. Safety check
   if (!userId || !isValidObjectId(userId)) return;
-  if (loadingConversations) return; // Wait until sidebar data is in
+  
+  // 2. Wait for conversations to finish loading
+  if (loadingConversations) return; 
 
   const openChat = async () => {
     try {
-      // Look for a convo where the owner (userId) is a member
-      const existing = conversations.find((c) =>
-        c.members?.some((m) => String(m._id) === String(userId))
+      // 3. Null-safe search (using optional chaining ?. and default empty array)
+      const existing = (conversations || []).find((c) =>
+        c?.members?.some((m) => m && String(m._id) === String(userId))
       );
 
       if (existing) {
         setCurrentChat(existing);
       } else {
-        // Create new if it doesn't exist
+        // Prevent chatting with yourself
+        if (user && String(user._id) === String(userId)) return;
+
         const res = await api.post("/api/messages/conversation", {
           receiverId: userId,
         });
-        const newChat = res.data.conversation;
-        setConversations((prev) => [newChat, ...prev]);
-        setCurrentChat(newChat);
+
+        if (res.data.success) {
+          const newChat = res.data.conversation;
+          setConversations((prev) => [newChat, ...prev]);
+          setCurrentChat(newChat);
+        }
       }
+
       if (isMobile) setIsMobileChatOpen(true);
     } catch (err) {
       console.error("Error opening chat:", err);
@@ -246,8 +255,7 @@ useEffect(() => {
   };
 
   openChat();
-}, [userId, loadingConversations, conversations.length]); // Add conversations.length
-
+}, [userId, loadingConversations, (conversations || []).length]);
   // ================= SOCKET UPDATE =================
   useEffect(() => {
     const handleNewMessage = (msg) => {
