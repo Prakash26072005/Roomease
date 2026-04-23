@@ -216,37 +216,37 @@ export default function ChatPage() {
   }, [user]);
 
   // ================= OPEN / CREATE CHAT =================
-  useEffect(() => {
-    if (!userId || !isValidObjectId(userId)) return;
-    if (loadingConversations) return;
+// Inside ChatPage.jsx - fix the dependency and logic
+useEffect(() => {
+  if (!userId || !isValidObjectId(userId)) return;
+  if (loadingConversations) return; // Wait until sidebar data is in
 
-    const existing = conversations.find((c) =>
-      c.members?.some((m) => String(m._id) === String(userId))
-    );
+  const openChat = async () => {
+    try {
+      // Look for a convo where the owner (userId) is a member
+      const existing = conversations.find((c) =>
+        c.members?.some((m) => String(m._id) === String(userId))
+      );
 
-    const openChat = async () => {
-      try {
-        if (existing) {
-          setCurrentChat(existing);
-        } else {
-          const res = await api.post("/api/messages/conversation", {
-            receiverId: userId,
-          });
-
-          const newChat = res.data.conversation;
-
-          setConversations((prev) => [newChat, ...prev]);
-          setCurrentChat(newChat);
-        }
-
-        if (isMobile) setIsMobileChatOpen(true);
-      } catch (err) {
-        console.error(err);
+      if (existing) {
+        setCurrentChat(existing);
+      } else {
+        // Create new if it doesn't exist
+        const res = await api.post("/api/messages/conversation", {
+          receiverId: userId,
+        });
+        const newChat = res.data.conversation;
+        setConversations((prev) => [newChat, ...prev]);
+        setCurrentChat(newChat);
       }
-    };
+      if (isMobile) setIsMobileChatOpen(true);
+    } catch (err) {
+      console.error("Error opening chat:", err);
+    }
+  };
 
-    openChat();
-  }, [userId, loadingConversations]);
+  openChat();
+}, [userId, loadingConversations, conversations.length]); // Add conversations.length
 
   // ================= SOCKET UPDATE =================
   useEffect(() => {
