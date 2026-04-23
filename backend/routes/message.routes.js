@@ -19,34 +19,40 @@ router.post("/conversation", verifyToken, async (req, res) => {
     return res.status(400).json({ message: "Invalid receiverId" });
   }
 
+  if (!req.user || !req.user._id) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
   try {
-    const members = getSortedMembers(req.user._id, receiverId);
+   const members = getSortedMembers(req.user._id, receiverId);
 
-    let convo = await Conversation.findOne({
+let convo = await Conversation.findOne({
   members: { $all: members, $size: 2 },
-}).populate(
-      "members",
-      "name"
-    );
+}).populate("members", "name");
 
-    if (!convo) {
-      try {
-        convo = await Conversation.create({ members });
-      } catch (err) {
-        if (err.code === 11000) {
-    convo = await Conversation.findOne({ members });
-        } else {
-          throw err;
-        }
-      }
-
-      convo = await convo.populate("members", "name");
+if (!convo) {
+  try {
+    convo = await Conversation.create({ members });
+    convo = await convo.populate("members", "name");
+  } catch (err) {
+    if (err.code === 11000) {
+      convo = await Conversation.findOne({
+        members: { $all: members, $size: 2 },
+      }).populate("members", "name");
+    } else {
+      throw err;
     }
+  }
+}
 
     res.json({ success: true, conversation: convo });
+
   } catch (err) {
-    console.error("CONVERSATION ERROR:", err);
-    res.status(500).json({ success: false });
+    console.error("CONVERSATION ERROR FULL 👉", err);
+    res.status(500).json({
+      success: false,
+      error: err.message,
+    });
   }
 });
 
@@ -64,18 +70,18 @@ router.post("/send", verifyToken, async (req, res) => {
     let convo;
 
     try {
-      convo = await Conversation.findOne({
-        members: { $all: members, $size: 2 },
-      });
+     convo = await Conversation.findOne({
+  members: { $all: members, $size: 2 },
+});
 
       if (!convo) {
         convo = await Conversation.create({ members });
       }
     } catch (err) {
-      if (err.code === 11000) {
-        convo = await Conversation.findOne({
-          members: { $all: members, $size: 2 },
-        });
+     if (err.code === 11000) {
+  convo = await Conversation.findOne({
+    members: { $all: members, $size: 2 }, // ✅ FIX
+  });
       } else {
         throw err;
       }
