@@ -6,10 +6,11 @@ import mongoose from "mongoose";
 
 const router = express.Router();
 
-// helper 🔥
 const getSortedMembers = (id1, id2) => {
   return [id1.toString(), id2.toString()].sort();
 };
+
+const getMembersKey = (members) => members.join("_");
 
 // ================= CREATE / GET CONVERSATION =================
 router.post("/conversation", verifyToken, async (req, res) => {
@@ -24,31 +25,39 @@ router.post("/conversation", verifyToken, async (req, res) => {
   }
 
   try {
-   const members = getSortedMembers(req.user._id, receiverId);
+    const members = getSortedMembers(req.user._id, receiverId);
+    const membersKey = getMembersKey(members);
 
-let convo = await Conversation.findOne({
-  members: { $all: members, $size: 2 },
-}).populate("members", "name");
+    let convo = await Conversation.findOne({ membersKey }).populate(
+      "members",
+      "name"
+    );
 
-if (!convo) {
-  try {
-    convo = await Conversation.create({ members });
-    convo = await convo.populate("members", "name");
-  } catch (err) {
-    if (err.code === 11000) {
-      convo = await Conversation.findOne({
-        members: { $all: members, $size: 2 },
-      }).populate("members", "name");
-    } else {
-      throw err;
+    if (!convo) {
+      try {
+        convo = await Conversation.create({ members, membersKey });
+        convo = await convo.populate("members", "name");
+      } catch (err) {
+        if (err.code === 11000) {
+          convo = await Conversation.findOne({ membersKey }).populate(
+            "members",
+            "name"
+          );
+        } else {
+          throw err;
+        }
+      }
     }
-  }
-}
+
+    if (!convo) {
+      return res
+        .status(500)
+        .json({ success: false, message: "Conversation could not be created" });
+    }
 
     res.json({ success: true, conversation: convo });
-
   } catch (err) {
-    console.error("CONVERSATION ERROR FULL 👉", err);
+    console.error("CONVERSATION ERROR FULL:", err);
     res.status(500).json({
       success: false,
       error: err.message,
@@ -66,25 +75,28 @@ router.post("/send", verifyToken, async (req, res) => {
 
   try {
     const members = getSortedMembers(req.user._id, receiverId);
+    const membersKey = getMembersKey(members);
 
     let convo;
 
     try {
-     convo = await Conversation.findOne({
-  members: { $all: members, $size: 2 },
-});
+      convo = await Conversation.findOne({ membersKey });
 
       if (!convo) {
-        convo = await Conversation.create({ members });
+        convo = await Conversation.create({ members, membersKey });
       }
     } catch (err) {
-     if (err.code === 11000) {
-  convo = await Conversation.findOne({
-    members: { $all: members, $size: 2 }, // ✅ FIX
-  });
+      if (err.code === 11000) {
+        convo = await Conversation.findOne({ membersKey });
       } else {
         throw err;
       }
+    }
+
+    if (!convo) {
+      return res
+        .status(500)
+        .json({ success: false, message: "Conversation could not be created" });
     }
 
     const message = await Message.create({

@@ -9,6 +9,11 @@ const conversationSchema = new mongoose.Schema(
         required: true,
       },
     ],
+    membersKey: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
     lastMessage: {
       type: String,
       default: "",
@@ -19,10 +24,11 @@ const conversationSchema = new mongoose.Schema(
 
 // 🔥 ensure sorted uniqueness
 conversationSchema.pre("save", function (next) {
-  this.members = this.members.sort();
+  this.members = this.members.map((member) => member.toString()).sort();
+  this.membersKey = this.members.join("_");
   next();
 });
 
-conversationSchema.index({ members: 1 }, { unique: true });
+conversationSchema.index({ membersKey: 1 }, { unique: true, sparse: true });
 
 export default mongoose.model("Conversation", conversationSchema);

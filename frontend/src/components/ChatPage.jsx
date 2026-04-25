@@ -158,7 +158,7 @@
 //     </div>
 //   );
 // }
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import ChatSidebar from "../pages/ChatSidebar";
 import ChatBox from "../pages/ChatBox";
 import { socket } from "../socket";
@@ -170,6 +170,8 @@ export default function ChatPage() {
   const [conversations, setConversations] = useState([]);
   const [currentChat, setCurrentChat] = useState(null);
   const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
+  const [chatError, setChatError] = useState("");
+  const openingUserIdRef = useRef("");
 
   const user = JSON.parse(localStorage.getItem("user"));
   const { userId } = useParams();
@@ -219,7 +221,10 @@ export default function ChatPage() {
     if (!userId || !isValidObjectId(userId)) return;
 
     // ❌ self chat block
-    if (user && String(user._id) === String(userId)) return;
+    if (user && String(user._id) === String(userId)) {
+      setChatError("You cannot chat with yourself.");
+      return;
+    }
 
     // 🔥 SAFE FIND
     const existing = conversations.find((c) =>
@@ -231,19 +236,29 @@ export default function ChatPage() {
     );
 
     if (existing) {
+      setChatError("");
+      openingUserIdRef.current = "";
       setCurrentChat(existing);
       if (isMobile) setIsMobileChatOpen(true);
       return;
     }
 
+    if (openingUserIdRef.current === userId) return;
+    openingUserIdRef.current = userId;
+
     // 🔥 CREATE NEW
     const openChat = async () => {
       try {
+        setChatError("");
         const res = await api.post("/api/messages/conversation", {
           receiverId: userId,
         });
 
         const newChat = res.data.conversation;
+
+        if (!newChat?._id || !Array.isArray(newChat.members)) {
+          throw new Error("Conversation was not created");
+        }
 
         setConversations((prev) =>
           [newChat, ...prev].filter(
@@ -255,6 +270,11 @@ export default function ChatPage() {
         if (isMobile) setIsMobileChatOpen(true);
       } catch (err) {
         console.error("Chat open error:", err);
+        setChatError(
+          err.response?.data?.message ||
+            "Unable to open this chat. Please try again."
+        );
+        openingUserIdRef.current = "";
       }
     };
 
@@ -317,11 +337,15 @@ export default function ChatPage() {
       />
 
       {(!isMobile || isMobileChatOpen) && (
-        <ChatBox
-          currentChat={currentChat}
-          user={user}
-          setIsMobileChatOpen={setIsMobileChatOpen}
-        />
+        chatError ? (
+          <h2>{chatError}</h2>
+        ) : (
+          <ChatBox
+            currentChat={currentChat}
+            user={user}
+            setIsMobileChatOpen={setIsMobileChatOpen}
+          />
+        )
       )}
     </div>
   );

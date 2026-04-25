@@ -178,6 +178,26 @@ app.use("/api/payment", paymentRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/favorites", favouriteRoutes);
+
+mongoose.connection.once("open", async () => {
+  try {
+    await Conversation.collection.dropIndex("members_1");
+    console.log("Removed old conversation members index");
+  } catch (err) {
+    if (err.codeName !== "IndexNotFound") {
+      console.error("Conversation index cleanup error:", err.message);
+    }
+  }
+
+  const conversations = await Conversation.find({
+    $or: [{ membersKey: { $exists: false } }, { membersKey: null }],
+  });
+
+  for (const conversation of conversations) {
+    await conversation.save();
+  }
+});
+
 /* ================= DB ================= */
 mongoose
   .connect(process.env.MONGO_URI)
@@ -214,25 +234,22 @@ io.on("connection", (socket) => {
         senderId.toString(),
         receiverId.toString(),
       ].sort();
+      const membersKey = members.join("_");
 
       let convo;
 
       try {
         // 1️⃣ find existing
-       convo = await Conversation.findOne({
-  members: { $all: members, $size: 2 },
-});
+       convo = await Conversation.findOne({ membersKey });
 
         // 2️⃣ create if not exists
         if (!convo) {
-          convo = await Conversation.create({ members });
+          convo = await Conversation.create({ members, membersKey });
         }
       } catch (err) {
         // 🔥 handle duplicate key error
         if (err.code === 11000) {
-         convo = await Conversation.findOne({
-  members: { $all: members, $size: 2 },
-});
+         convo = await Conversation.findOne({ membersKey });
         } else {
           throw err;
         }
