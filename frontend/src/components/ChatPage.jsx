@@ -193,7 +193,6 @@
 //   );
 // }
 
-
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import ChatSidebar from "../pages/ChatSidebar";
 import ChatBox from "../pages/ChatBox";
@@ -255,19 +254,22 @@ export default function ChatPage() {
   useEffect(() => {
     if (!userId || !isValidObjectId(userId)) return;
 
-    // ❌ self chat block
+    // ❌ self chat
     if (user && String(user._id) === String(userId)) {
       setChatError("You cannot chat with yourself.");
       return;
     }
 
-    // 🔥 SAFE FIND
+    // 🔥 WAIT for conversations (IMPORTANT FIX)
+    if (conversations.length === 0) return;
+
     const existing = conversations.find((c) =>
       c?.members?.some(
         (m) => m?._id && String(m._id) === String(userId)
       )
     );
 
+    // ✅ existing chat open
     if (existing) {
       setChatError("");
       openingUserIdRef.current = "";
@@ -276,6 +278,7 @@ export default function ChatPage() {
       return;
     }
 
+    // ❌ prevent multiple API calls
     if (openingUserIdRef.current === userId) return;
     openingUserIdRef.current = userId;
 
@@ -294,14 +297,12 @@ export default function ChatPage() {
           throw new Error("Conversation was not created");
         }
 
-        // ✅ FIX: no duplicate add
+        // ✅ FIX: avoid duplicate
         setConversations((prev) => {
           const exists = prev.some(
             (c) => String(c._id) === String(newChat._id)
           );
-
           if (exists) return prev;
-
           return [newChat, ...prev];
         });
 
@@ -321,51 +322,45 @@ export default function ChatPage() {
   }, [userId, conversations, isMobile]);
 
   // ================= SOCKET UPDATE =================
-useEffect(() => {
-  const handleNewMessage = (msg) => {
-    setConversations((prev) => {
-      // ✅ already updated? skip
-      const exists = prev.find(
-        (c) =>
-          String(c._id) === String(msg.conversationId) &&
-          c.lastMessage === msg.text
-      );
+  useEffect(() => {
+    const handleNewMessage = (msg) => {
+      setConversations((prev) => {
+        const updated = [...prev];
 
-      if (exists) return prev;
+        const index = updated.findIndex(
+          (c) => String(c._id) === String(msg.conversationId)
+        );
 
-      const updated = [...prev];
+        if (index !== -1) {
+          // ✅ prevent duplicate update
+          if (updated[index].lastMessage === msg.text) return prev;
 
-      const index = updated.findIndex(
-        (c) => String(c._id) === String(msg.conversationId)
-      );
+          updated[index].lastMessage = msg.text;
 
-      if (index !== -1) {
-        updated[index].lastMessage = msg.text;
+          const [chat] = updated.splice(index, 1);
+          updated.unshift(chat);
+        }
 
-        const [chat] = updated.splice(index, 1);
-        updated.unshift(chat);
-      }
+        return updated;
+      });
+    };
 
-      return updated;
-    });
-  };
+    // ✅ KEEP BOTH (important for your backend)
+    socket.on("receiveMessage", handleNewMessage);
+    socket.on("messageSent", handleNewMessage);
 
-  // ✅ BOTH EVENTS (important)
-  socket.on("receiveMessage", handleNewMessage);
-  socket.on("messageSent", handleNewMessage);
-
-  return () => {
-    socket.off("receiveMessage", handleNewMessage);
-    socket.off("messageSent", handleNewMessage);
-  };
-}, []);
+    return () => {
+      socket.off("receiveMessage", handleNewMessage);
+      socket.off("messageSent", handleNewMessage);
+    };
+  }, []);
 
   // ================= DEFAULT =================
   useEffect(() => {
-    if (!userId && conversations.length > 0) {
+    if (conversations.length > 0 && !currentChat) {
       setCurrentChat(conversations[0]);
     }
-  }, [conversations, userId]);
+  }, [conversations]);
 
   return (
     <div className="chat-page">
