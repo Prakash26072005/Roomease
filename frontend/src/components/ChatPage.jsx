@@ -282,40 +282,66 @@ export default function ChatPage() {
   }, [userId, conversations, isMobile]);
 
   // ================= SOCKET UPDATE =================
+  // useEffect(() => {
+  //   const handleNewMessage = (msg) => {
+  //     setConversations((prev) => {
+  //       const updated = [...prev];
+
+  //       const index = updated.findIndex(
+  //         (c) =>
+  //           c &&
+  //           c._id &&
+  //           String(c._id) === String(msg.conversationId)
+  //       );
+
+  //       if (index !== -1) {
+  //         updated[index].lastMessage = msg.text;
+
+  //         const [chat] = updated.splice(index, 1);
+  //         updated.unshift(chat);
+  //       }
+
+  //       return updated.filter(
+  //         (c) => c && c._id && c.members
+  //       );
+  //     });
+  //   };
+
+  //   socket.on("receiveMessage", handleNewMessage);
+  //   socket.on("messageSent", handleNewMessage);
+
+  //   return () => {
+  //     socket.off("receiveMessage", handleNewMessage);
+  //     socket.off("messageSent", handleNewMessage);
+  //   };
+  // }, []);
+
   useEffect(() => {
-    const handleNewMessage = (msg) => {
-      setConversations((prev) => {
-        const updated = [...prev];
+  const handleNewMessage = (msg) => {
+    setConversations((prev) => {
+      const updated = [...prev];
 
-        const index = updated.findIndex(
-          (c) =>
-            c &&
-            c._id &&
-            String(c._id) === String(msg.conversationId)
-        );
+      const index = updated.findIndex(
+        (c) => String(c._id) === String(msg.conversationId)
+      );
 
-        if (index !== -1) {
-          updated[index].lastMessage = msg.text;
+      if (index !== -1) {
+        updated[index].lastMessage = msg.text;
 
-          const [chat] = updated.splice(index, 1);
-          updated.unshift(chat);
-        }
+        const [chat] = updated.splice(index, 1);
+        updated.unshift(chat);
+      }
 
-        return updated.filter(
-          (c) => c && c._id && c.members
-        );
-      });
-    };
+      return updated;
+    });
+  };
 
-    socket.on("receiveMessage", handleNewMessage);
-    socket.on("messageSent", handleNewMessage);
+  socket.on("receiveMessage", handleNewMessage);
 
-    return () => {
-      socket.off("receiveMessage", handleNewMessage);
-      socket.off("messageSent", handleNewMessage);
-    };
-  }, []);
-
+  return () => {
+    socket.off("receiveMessage", handleNewMessage);
+  };
+}, []);
   // ================= DEFAULT =================
   useEffect(() => {
     if (!userId && conversations.length > 0) {
