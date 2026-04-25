@@ -321,33 +321,44 @@ export default function ChatPage() {
   }, [userId, conversations, isMobile]);
 
   // ================= SOCKET UPDATE =================
-  useEffect(() => {
-    const handleNewMessage = (msg) => {
-      setConversations((prev) => {
-        const updated = [...prev];
+useEffect(() => {
+  const handleNewMessage = (msg) => {
+    setConversations((prev) => {
+      // ✅ already updated? skip
+      const exists = prev.find(
+        (c) =>
+          String(c._id) === String(msg.conversationId) &&
+          c.lastMessage === msg.text
+      );
 
-        const index = updated.findIndex(
-          (c) => String(c._id) === String(msg.conversationId)
-        );
+      if (exists) return prev;
 
-        if (index !== -1) {
-          updated[index].lastMessage = msg.text;
+      const updated = [...prev];
 
-          const [chat] = updated.splice(index, 1);
-          updated.unshift(chat);
-        }
+      const index = updated.findIndex(
+        (c) => String(c._id) === String(msg.conversationId)
+      );
 
-        return updated;
-      });
-    };
+      if (index !== -1) {
+        updated[index].lastMessage = msg.text;
 
-    // ✅ only one event
-    socket.on("receiveMessage", handleNewMessage);
+        const [chat] = updated.splice(index, 1);
+        updated.unshift(chat);
+      }
 
-    return () => {
-      socket.off("receiveMessage", handleNewMessage);
-    };
-  }, []);
+      return updated;
+    });
+  };
+
+  // ✅ BOTH EVENTS (important)
+  socket.on("receiveMessage", handleNewMessage);
+  socket.on("messageSent", handleNewMessage);
+
+  return () => {
+    socket.off("receiveMessage", handleNewMessage);
+    socket.off("messageSent", handleNewMessage);
+  };
+}, []);
 
   // ================= DEFAULT =================
   useEffect(() => {
