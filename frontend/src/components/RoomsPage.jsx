@@ -20,6 +20,19 @@ const location = queryParams.get("location") || "";
   const fallbackImage =
     "https://via.placeholder.com/300x200?text=No+Image";
 
+  const getOwnerId = (owner) => {
+    if (!owner) return "";
+    return typeof owner === "object" ? owner._id : owner;
+  };
+
+  const getLoggedInUser = () => {
+    try {
+      return JSON.parse(localStorage.getItem("user"));
+    } catch {
+      return null;
+    }
+  };
+
   // ================= FETCH ROOMS =================
 useEffect(() => {
   const fetchRooms = async () => {
@@ -88,6 +101,31 @@ const toggleLike = async (roomId, e) => {
   } catch (err) {
     console.error("Toggle error:", err);
   }
+};
+
+const handleChatClick = (room, e) => {
+  e.preventDefault();
+  e.stopPropagation();
+
+  const ownerId = getOwnerId(room.owner);
+  const user = getLoggedInUser();
+
+  if (!user?._id) {
+    navigate("/login");
+    return;
+  }
+
+  if (!ownerId) {
+    alert("Owner details are not available for this room.");
+    return;
+  }
+
+  if (String(ownerId) === String(user._id)) {
+    alert("You cannot chat with yourself.");
+    return;
+  }
+
+  navigate(`/chatpage/${ownerId}`);
 };
 
   // ================= LOADING =================
@@ -162,11 +200,7 @@ if (loading) {
 
                   <button
                     className="chat-btn"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                     navigate(`/chatpage/${room.owner._id}`);
-                    }}
+                    onClick={(e) => handleChatClick(room, e)}
                   >
                     <BiChat /> Chat
                   </button>

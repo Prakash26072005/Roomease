@@ -30,7 +30,7 @@ export default function ChatSidebar({
         {conversations?.map((c) => {
           
           // 🔥 FULL SAFETY
-    if (!c || !Array.isArray(c.members)) return null;
+          if (!c || !c.members) return null;
 
           const otherUser = c.members.find(
             (m) =>

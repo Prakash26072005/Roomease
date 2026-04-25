@@ -88,7 +88,7 @@ const onSearch = (e) => {
     if (!user) {
       navigate("/login");
     } else {
- navigate(`/chatpage/${user._id}`);
+ navigate("/chatpage");
     }
   };
   useEffect(() => {
