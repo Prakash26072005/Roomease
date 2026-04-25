@@ -154,7 +154,6 @@
 //     </div>
 //   );
 // }
-
 import "../styles/ChatBox.css";
 import { useEffect, useState, useRef } from "react";
 import api from "../utils/axios";
@@ -183,16 +182,9 @@ export default function ChatBox({ currentChat, user, setIsMobileChatOpen }) {
   useEffect(() => {
     if (!currentChat?._id) return;
 
-    const fetchMessages = async () => {
-      try {
-        const res = await api.get(`/api/messages/${currentChat._id}`);
-        setMessages(res.data.messages || []);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    fetchMessages();
+    api.get(`/api/messages/${currentChat._id}`).then((res) => {
+      setMessages(res.data.messages || []);
+    });
   }, [currentChat]);
 
   // ================= SOCKET =================
@@ -203,7 +195,7 @@ export default function ChatBox({ currentChat, user, setIsMobileChatOpen }) {
         currentChat?._id.toString()
       ) return;
 
-      // ❌ duplicate prevent (same id)
+      // ❌ same message twice (socket duplicate)
       if (lastMsgIdRef.current === msg._id) return;
       lastMsgIdRef.current = msg._id;
 
@@ -229,56 +221,46 @@ export default function ChatBox({ currentChat, user, setIsMobileChatOpen }) {
       });
     };
 
+    // ✅ keep both (backend compatible)
     socket.on("receiveMessage", handleReceive);
+    socket.on("messageSent", handleReceive);
 
     return () => {
       socket.off("receiveMessage", handleReceive);
+      socket.off("messageSent", handleReceive);
     };
   }, [currentChat]);
-
-  // ================= SEND =================
-  const sendMessage = async () => {
-    if (!text.trim() || !receiverId) return;
-
-    const tempId = Date.now();
-
-    const tempMsg = {
-      _id: tempId,
-      sender: user._id,
-      text,
-      conversationId: currentChat._id,
-      pending: true,
-    };
-
-    // ✅ optimistic UI
-    setMessages((prev) => [...prev, tempMsg]);
-
-    try {
-      const res = await api.post("/api/messages", {
-        conversationId: currentChat._id,
-        text,
-      });
-
-      const realMsg = res.data.message;
-
-      // ✅ replace temp
-      setMessages((prev) =>
-        prev.map((m) => (m._id === tempId ? realMsg : m))
-      );
-
-      // ✅ emit socket
-      socket.emit("sendMessage", realMsg);
-    } catch (err) {
-      console.error(err);
-    }
-
-    setText("");
-  };
 
   // ================= SCROLL =================
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // ================= SEND =================
+  const sendMessage = () => {
+    if (!text.trim() || !receiverId) return;
+
+    const tempId = Date.now();
+
+    const newMsg = {
+      _id: tempId,
+      sender: user._id,
+      text,
+      conversationId: currentChat._id,
+      pending: true, // 🔥 important
+    };
+
+    // ✅ optimistic
+    setMessages((prev) => [...prev, newMsg]);
+
+    socket.emit("sendMessage", {
+      senderId: user._id,
+      receiverId,
+      text,
+    });
+
+    setText("");
+  };
 
   // ================= ENTER =================
   const handleKeyDown = (e) => {
@@ -318,7 +300,7 @@ export default function ChatBox({ currentChat, user, setIsMobileChatOpen }) {
       <div className="chat-messages">
         {messages.map((m, i) => (
           <div
-            key={m._id}
+            key={m._id || i}
             ref={i === messages.length - 1 ? scrollRef : null}
           >
             <MessageBubble
