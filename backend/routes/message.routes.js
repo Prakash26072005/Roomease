@@ -12,6 +12,15 @@ const getSortedMembers = (id1, id2) => {
 
 const getMembersKey = (members) => members.join("_");
 
+const findConversationByMembers = (members, membersKey) => {
+  return Conversation.findOne({
+    $or: [
+      { membersKey },
+      { members: { $all: members, $size: 2 } },
+    ],
+  });
+};
+
 // ================= CREATE / GET CONVERSATION =================
 router.post("/conversation", verifyToken, async (req, res) => {
   const { receiverId } = req.body;
@@ -28,7 +37,7 @@ router.post("/conversation", verifyToken, async (req, res) => {
     const members = getSortedMembers(req.user._id, receiverId);
     const membersKey = getMembersKey(members);
 
-    let convo = await Conversation.findOne({ membersKey }).populate(
+    let convo = await findConversationByMembers(members, membersKey).populate(
       "members",
       "name"
     );
@@ -39,7 +48,7 @@ router.post("/conversation", verifyToken, async (req, res) => {
         convo = await convo.populate("members", "name");
       } catch (err) {
         if (err.code === 11000) {
-          convo = await Conversation.findOne({ membersKey }).populate(
+          convo = await findConversationByMembers(members, membersKey).populate(
             "members",
             "name"
           );
@@ -80,14 +89,14 @@ router.post("/send", verifyToken, async (req, res) => {
     let convo;
 
     try {
-      convo = await Conversation.findOne({ membersKey });
+      convo = await findConversationByMembers(members, membersKey);
 
       if (!convo) {
         convo = await Conversation.create({ members, membersKey });
       }
     } catch (err) {
       if (err.code === 11000) {
-        convo = await Conversation.findOne({ membersKey });
+        convo = await findConversationByMembers(members, membersKey);
       } else {
         throw err;
       }

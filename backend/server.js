@@ -194,7 +194,19 @@ mongoose.connection.once("open", async () => {
   });
 
   for (const conversation of conversations) {
-    await conversation.save();
+    conversation.members = conversation.members
+      .map((member) => member.toString())
+      .sort();
+    conversation.membersKey = conversation.members.join("_");
+    await Conversation.updateOne(
+      { _id: conversation._id },
+      {
+        $set: {
+          members: conversation.members,
+          membersKey: conversation.membersKey,
+        },
+      }
+    );
   }
 });
 
@@ -240,7 +252,12 @@ io.on("connection", (socket) => {
 
       try {
         // 1️⃣ find existing
-       convo = await Conversation.findOne({ membersKey });
+       convo = await Conversation.findOne({
+         $or: [
+           { membersKey },
+           { members: { $all: members, $size: 2 } },
+         ],
+       });
 
         // 2️⃣ create if not exists
         if (!convo) {
@@ -249,7 +266,12 @@ io.on("connection", (socket) => {
       } catch (err) {
         // 🔥 handle duplicate key error
         if (err.code === 11000) {
-         convo = await Conversation.findOne({ membersKey });
+         convo = await Conversation.findOne({
+           $or: [
+             { membersKey },
+             { members: { $all: members, $size: 2 } },
+           ],
+         });
         } else {
           throw err;
         }
