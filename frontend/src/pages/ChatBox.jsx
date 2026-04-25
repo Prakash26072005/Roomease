@@ -1,3 +1,4 @@
+
 // import "../styles/ChatBox.css";
 // import { useEffect, useState, useRef } from "react";
 // import api from "../utils/axios";
@@ -127,7 +128,11 @@
 //           >
 //             <MessageBubble
 //               message={m}
-//               own={m.sender.toString() === user._id.toString()}
+//             own={
+//   m.sender &&
+//   user &&
+//   m.sender.toString() === user._id.toString()
+// }
 //             />
 //           </div>
 //         ))}
@@ -149,6 +154,7 @@
 //     </div>
 //   );
 // }
+
 import "../styles/ChatBox.css";
 import { useEffect, useState, useRef } from "react";
 import api from "../utils/axios";
@@ -156,91 +162,130 @@ import { socket } from "../socket";
 import MessageBubble from "./MessageBubble";
 import SendIcon from "@mui/icons-material/Send";
 
-export default function ChatBox({ currentChat, user,setIsMobileChatOpen}) {
+export default function ChatBox({ currentChat, user, setIsMobileChatOpen }) {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
-  const scrollRef = useRef();
+  const scrollRef = useRef(null);
+  const lastMsgIdRef = useRef(null);
 
-  // 🔥 get receiver
+  // 🔥 receiver
   const receiverId =
     currentChat?.members?.find(
       (m) => m?._id && m._id.toString() !== user._id.toString()
     )?._id;
 
-  // 🔥 get other user (for header)
+  // 🔥 other user
   const otherUser = currentChat?.members?.find(
     (m) => m?._id && m._id.toString() !== user._id.toString()
   );
 
-  // ================= LOAD MESSAGES =================
+  // ================= LOAD =================
   useEffect(() => {
     if (!currentChat?._id) return;
 
-    api.get(`/api/messages/${currentChat._id}`).then((res) => {
-      setMessages(res.data.messages);
-    });
+    const fetchMessages = async () => {
+      try {
+        const res = await api.get(`/api/messages/${currentChat._id}`);
+        setMessages(res.data.messages || []);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchMessages();
   }, [currentChat]);
 
-  // ================= SOCKET LISTEN =================
-useEffect(() => {
-  const handleReceive = (msg) => {
-    if (
-      msg.conversationId.toString() ===
-      currentChat?._id.toString()
-    ) {
+  // ================= SOCKET =================
+  useEffect(() => {
+    const handleReceive = (msg) => {
+      if (
+        msg.conversationId.toString() !==
+        currentChat?._id.toString()
+      ) return;
+
+      // ❌ duplicate prevent (same id)
+      if (lastMsgIdRef.current === msg._id) return;
+      lastMsgIdRef.current = msg._id;
+
       setMessages((prev) => {
-        const exists = prev.find((m) => m._id === msg._id);
-        if (exists) return prev;
+        // ✅ already exists
+        if (prev.some((m) => m._id === msg._id)) return prev;
+
+        // ✅ replace optimistic message
+        const tempIndex = prev.findIndex(
+          (m) =>
+            m.pending &&
+            m.text === msg.text &&
+            m.sender.toString() === msg.sender.toString()
+        );
+
+        if (tempIndex !== -1) {
+          const updated = [...prev];
+          updated[tempIndex] = msg;
+          return updated;
+        }
+
         return [...prev, msg];
       });
-    }
-  };
+    };
 
-  socket.on("receiveMessage", handleReceive);
-  socket.on("messageSent", handleReceive);
+    socket.on("receiveMessage", handleReceive);
 
-  return () => {
-    socket.off("receiveMessage", handleReceive);
-    socket.off("messageSent", handleReceive);
-  };
-}, [currentChat]);
+    return () => {
+      socket.off("receiveMessage", handleReceive);
+    };
+  }, [currentChat]);
 
-  // ================= AUTO SCROLL =================
-  useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  // ================= SEND MESSAGE =================
-  const sendMessage = () => {
+  // ================= SEND =================
+  const sendMessage = async () => {
     if (!text.trim() || !receiverId) return;
 
-    const newMsg = {
-      _id: Date.now(),
+    const tempId = Date.now();
+
+    const tempMsg = {
+      _id: tempId,
       sender: user._id,
       text,
       conversationId: currentChat._id,
+      pending: true,
     };
 
-    // 🔥 optimistic UI
-    setMessages((prev) => [...prev, newMsg]);
+    // ✅ optimistic UI
+    setMessages((prev) => [...prev, tempMsg]);
 
-    socket.emit("sendMessage", {
-      senderId: user._id,
-      receiverId,
-      text,
-    });
+    try {
+      const res = await api.post("/api/messages", {
+        conversationId: currentChat._id,
+        text,
+      });
+
+      const realMsg = res.data.message;
+
+      // ✅ replace temp
+      setMessages((prev) =>
+        prev.map((m) => (m._id === tempId ? realMsg : m))
+      );
+
+      // ✅ emit socket
+      socket.emit("sendMessage", realMsg);
+    } catch (err) {
+      console.error(err);
+    }
 
     setText("");
   };
 
-  // 🔥 Enter to send
+  // ================= SCROLL =================
+  useEffect(() => {
+    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // ================= ENTER =================
   const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      sendMessage();
-    }
+    if (e.key === "Enter") sendMessage();
   };
 
-  // ================= EMPTY STATE =================
+  // ================= EMPTY =================
   if (!currentChat || !currentChat.members) {
     return <h2>Select a chat</h2>;
   }
@@ -248,15 +293,15 @@ useEffect(() => {
   // ================= UI =================
   return (
     <div className="chatbox">
-
-      {/* 🔥 HEADER */}
+      {/* HEADER */}
       <div className="chat-header">
-         <button 
-  className="back-btn"
-  onClick={() => setIsMobileChatOpen(false)}
->
-  ←
-</button>
+        <button
+          className="back-btn"
+          onClick={() => setIsMobileChatOpen(false)}
+        >
+          ←
+        </button>
+
         <div className="chat-user">
           <div className="chat-avatar">
             {otherUser?.name?.charAt(0).toUpperCase() || "U"}
@@ -269,26 +314,26 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* 🔥 MESSAGES */}
+      {/* MESSAGES */}
       <div className="chat-messages">
         {messages.map((m, i) => (
           <div
-            key={m._id || i}
+            key={m._id}
             ref={i === messages.length - 1 ? scrollRef : null}
           >
             <MessageBubble
               message={m}
-            own={
-  m.sender &&
-  user &&
-  m.sender.toString() === user._id.toString()
-}
+              own={
+                m.sender &&
+                user &&
+                m.sender.toString() === user._id.toString()
+              }
             />
           </div>
         ))}
       </div>
 
-      {/* 🔥 INPUT */}
+      {/* INPUT */}
       <div className="chat-input-area">
         <input
           value={text}
