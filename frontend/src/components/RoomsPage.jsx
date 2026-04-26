@@ -413,15 +413,14 @@ export default function RoomsPage() {
 
       {/* LOAD MORE */}
       {!loading && visibleCount < rooms.length && (
-        <div className="load-more">
-          <button
-            onClick={() =>
-              setVisibleCount((prev) => prev + 8)
-            }
-          >
-            Load More
-          </button>
-        </div>
+       <div className="load-more">
+  <button
+    className="load-more-btn"
+    onClick={() => setVisibleCount((prev) => prev + 8)}
+  >
+    Load More Rooms
+  </button>
+</div>
       )}
     </div>
   );
