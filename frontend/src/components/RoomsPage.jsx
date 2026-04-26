@@ -1,29 +1,249 @@
+// import React, { useEffect, useState } from "react";
+// import { useNavigate, Link } from "react-router-dom";
+// import api from "../utils/axios";
+// import "../styles/RoomPage.css";
+// import { FaHeart, FaRegHeart } from "react-icons/fa";
+// import { MdLocationOn } from "react-icons/md";
+// import { BiChat } from "react-icons/bi";
+// import Loader from "./Loader.jsx";
+// import { useLocation } from "react-router-dom";
+
+// export default function RoomsPage() {
+//   const [rooms, setRooms] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [liked, setLiked] = useState({});
+//   const locationHook = useLocation();
+// const queryParams = new URLSearchParams(locationHook.search);
+// const location = queryParams.get("location") || "";
+//   const navigate = useNavigate();
+
+//   const fallbackImage =
+//     "https://via.placeholder.com/300x200?text=No+Image";
+
+//   const getOwnerId = (owner) => {
+//     if (!owner) return "";
+//     return typeof owner === "object" ? owner._id : owner;
+//   };
+
+//   const getLoggedInUser = () => {
+//     try {
+//       return JSON.parse(localStorage.getItem("user"));
+//     } catch {
+//       return null;
+//     }
+//   };
+
+//   // ================= FETCH ROOMS =================
+// useEffect(() => {
+//   const fetchRooms = async () => {
+//     setLoading(true);
+
+//     try {
+//       const res = await api.get(
+//         `/api/rooms/all?location=${location}`
+//       );
+
+//       if (res.data.success) {
+//         setRooms(res.data.rooms);
+//       }
+//     } catch (err) {
+//       console.error("Fetch rooms error:", err);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const delay = setTimeout(fetchRooms, 500); // debounce
+
+//   return () => clearTimeout(delay);
+// }, [location]);
+//   // ================= FETCH FAVORITES =================
+// useEffect(() => {
+//   const fetchFavorites = async () => {
+//     try {
+//       const res = await api.get("/api/favorites/favorites");
+
+//       if (res.data.success) {
+//         const likedMap = {};
+
+//         res.data.rooms.forEach((room) => {
+//           likedMap[room._id] = true;
+//         });
+
+//         setLiked(likedMap);
+//       }
+//     } catch (err) {
+//       console.error(err);
+//     }
+//   };
+
+//   fetchFavorites();
+// }, []);
+
+//   // ================= TOGGLE LIKE =================
+// const toggleLike = async (roomId, e) => {
+//   e.preventDefault();
+//   e.stopPropagation();
+
+//   try {
+//     const res = await api.post(`/api/favorites/toggle-favorite/${roomId}`);
+
+//     if (res.data.success) {
+//       const likedMap = {};
+
+//       res.data.favorites.forEach((item) => {
+//         const id = typeof item === "object" ? item._id : item;
+//         likedMap[id] = true;
+//       });
+
+//       setLiked(likedMap);
+//     }
+//   } catch (err) {
+//     console.error("Toggle error:", err);
+//   }
+// };
+
+// const handleChatClick = (room, e) => {
+//   e.preventDefault();
+//   e.stopPropagation();
+
+//   const ownerId = getOwnerId(room.owner);
+//   const user = getLoggedInUser();
+
+//   if (!user?._id) {
+//     navigate("/login");
+//     return;
+//   }
+
+//   if (!ownerId) {
+//     alert("Owner details are not available for this room.");
+//     return;
+//   }
+
+//   if (String(ownerId) === String(user._id)) {
+//     alert("You cannot chat with yourself.");
+//     return;
+//   }
+
+//   navigate(`/chatpage/${ownerId}`);
+// };
+
+//   // ================= LOADING =================
+//   // if (loading) {
+//   //   return <h2 className="loading">Loading rooms...</h2>;
+//   // }
+// if (loading) {
+//   return <Loader />;
+// }
+
+//   // ================= UI =================
+//   return (
+//     <div className="rooms-page">
+//       {/* HEADER */}
+//       <div className="rooms-header">
+//         <h1>Find Your Perfect Room</h1>
+//         <p>
+//           Browse through our curated list of rooms available for rent
+//         </p>
+//       </div>
+
+//       {/* GRID */}
+//       <div className="rooms-grid">
+//         {rooms.map((room) => (
+//           <Link
+//             to={`/room/${room._id}`}
+//             key={room._id}
+//             className="room-link"
+//           >
+//             <div className="room-card">
+//               {/* IMAGE */}
+//               <div className="room-image-wrapper">
+//                 <img
+//                   src={
+//                     room.images?.[0]?.url || fallbackImage
+//                   }
+//                   alt={room.title}
+//                 />
+
+//                 {/* ❤️ HEART */}
+//                 <div
+//                   className="heart-icon"
+//                   onClick={(e) => toggleLike(room._id, e)}
+//                 >
+//                   {liked[room._id] ? (
+//                     <FaHeart color="red" />
+//                   ) : (
+//                     <FaRegHeart />
+//                   )}
+//                 </div>
+//               </div>
+
+//               {/* CONTENT */}
+//               <div className="room-content">
+//                 <h3>{room.title}</h3>
+
+//                 <p className="location">
+//                   <MdLocationOn />{" "}
+//                   {room.location?.address || "No location"}
+//                 </p>
+
+//                 <p className="desc">
+//                   {room.description?.slice(0, 80) ||
+//                     "Well-furnished room with great amenities."}
+//                 </p>
+
+//                 {/* PRICE + CHAT */}
+//                 <div className="room-footer">
+//                   <span className="price">
+//                     ₹{room.price} <small>/month</small>
+//                   </span>
+
+//                   <button
+//                     className="chat-btn"
+//                     onClick={(e) => handleChatClick(room, e)}
+//                   >
+//                     <BiChat /> Chat
+//                   </button>
+//                 </div>
+
+//                 <p className="owner">
+//                   Owner: {room.owner?.name || "Unknown"}
+//                 </p>
+//               </div>
+//             </div>
+//           </Link>
+//         ))}
+//       </div>
+//     </div>
+//   );
+// }
+
 import React, { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import api from "../utils/axios";
 import "../styles/RoomPage.css";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { MdLocationOn } from "react-icons/md";
 import { BiChat } from "react-icons/bi";
-import Loader from "./Loader.jsx";
-import { useLocation } from "react-router-dom";
 
 export default function RoomsPage() {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [liked, setLiked] = useState({});
+  const [visibleCount, setVisibleCount] = useState(8);
+
   const locationHook = useLocation();
-const queryParams = new URLSearchParams(locationHook.search);
-const location = queryParams.get("location") || "";
+  const queryParams = new URLSearchParams(locationHook.search);
+  const location = queryParams.get("location") || "";
+
   const navigate = useNavigate();
 
   const fallbackImage =
     "https://via.placeholder.com/300x200?text=No+Image";
 
-  const getOwnerId = (owner) => {
-    if (!owner) return "";
-    return typeof owner === "object" ? owner._id : owner;
-  };
+  // ================= HELPERS =================
+  const getOwnerId = (owner) =>
+    typeof owner === "object" ? owner?._id : owner;
 
   const getLoggedInUser = () => {
     try {
@@ -33,187 +253,176 @@ const location = queryParams.get("location") || "";
     }
   };
 
-  // ================= FETCH ROOMS =================
-useEffect(() => {
-  const fetchRooms = async () => {
-    setLoading(true);
+  // ================= FETCH DATA =================
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+
+      try {
+        const [roomsRes, favRes] = await Promise.all([
+          api.get(`/api/rooms/all?location=${location}`),
+          api.get("/api/favorites/favorites"),
+        ]);
+
+        if (roomsRes.data.success) {
+          setRooms(roomsRes.data.rooms);
+        }
+
+        if (favRes.data.success) {
+          const likedMap = {};
+          favRes.data.rooms.forEach((room) => {
+            likedMap[room._id] = true;
+          });
+          setLiked(likedMap);
+        }
+      } catch (err) {
+        console.error("Fetch error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [location]);
+
+  // ================= TOGGLE LIKE =================
+  const toggleLike = async (roomId, e) => {
+    e.preventDefault();
+    e.stopPropagation();
 
     try {
-      const res = await api.get(
-        `/api/rooms/all?location=${location}`
+      const res = await api.post(
+        `/api/favorites/toggle-favorite/${roomId}`
       );
 
       if (res.data.success) {
-        setRooms(res.data.rooms);
-      }
-    } catch (err) {
-      console.error("Fetch rooms error:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const delay = setTimeout(fetchRooms, 500); // debounce
-
-  return () => clearTimeout(delay);
-}, [location]);
-  // ================= FETCH FAVORITES =================
-useEffect(() => {
-  const fetchFavorites = async () => {
-    try {
-      const res = await api.get("/api/favorites/favorites");
-
-      if (res.data.success) {
         const likedMap = {};
-
-        res.data.rooms.forEach((room) => {
-          likedMap[room._id] = true;
+        res.data.favorites.forEach((item) => {
+          const id =
+            typeof item === "object" ? item._id : item;
+          likedMap[id] = true;
         });
-
         setLiked(likedMap);
       }
     } catch (err) {
-      console.error(err);
+      console.error("Toggle error:", err);
     }
   };
 
-  fetchFavorites();
-}, []);
+  // ================= CHAT =================
+  const handleChatClick = (room, e) => {
+    e.preventDefault();
+    e.stopPropagation();
 
-  // ================= TOGGLE LIKE =================
-const toggleLike = async (roomId, e) => {
-  e.preventDefault();
-  e.stopPropagation();
+    const ownerId = getOwnerId(room.owner);
+    const user = getLoggedInUser();
 
-  try {
-    const res = await api.post(`/api/favorites/toggle-favorite/${roomId}`);
+    if (!user?._id) return navigate("/login");
+    if (!ownerId) return alert("Owner not found");
+    if (String(ownerId) === String(user._id))
+      return alert("You cannot chat with yourself");
 
-    if (res.data.success) {
-      const likedMap = {};
-
-      res.data.favorites.forEach((item) => {
-        const id = typeof item === "object" ? item._id : item;
-        likedMap[id] = true;
-      });
-
-      setLiked(likedMap);
-    }
-  } catch (err) {
-    console.error("Toggle error:", err);
-  }
-};
-
-const handleChatClick = (room, e) => {
-  e.preventDefault();
-  e.stopPropagation();
-
-  const ownerId = getOwnerId(room.owner);
-  const user = getLoggedInUser();
-
-  if (!user?._id) {
-    navigate("/login");
-    return;
-  }
-
-  if (!ownerId) {
-    alert("Owner details are not available for this room.");
-    return;
-  }
-
-  if (String(ownerId) === String(user._id)) {
-    alert("You cannot chat with yourself.");
-    return;
-  }
-
-  navigate(`/chatpage/${ownerId}`);
-};
-
-  // ================= LOADING =================
-  // if (loading) {
-  //   return <h2 className="loading">Loading rooms...</h2>;
-  // }
-if (loading) {
-  return <Loader />;
-}
+    navigate(`/chatpage/${ownerId}`);
+  };
 
   // ================= UI =================
   return (
     <div className="rooms-page">
-      {/* HEADER */}
       <div className="rooms-header">
         <h1>Find Your Perfect Room</h1>
-        <p>
-          Browse through our curated list of rooms available for rent
-        </p>
+        <p>Browse rooms available for rent</p>
       </div>
 
-      {/* GRID */}
       <div className="rooms-grid">
-        {rooms.map((room) => (
-          <Link
-            to={`/room/${room._id}`}
-            key={room._id}
-            className="room-link"
-          >
-            <div className="room-card">
-              {/* IMAGE */}
-              <div className="room-image-wrapper">
-                <img
-                  src={
-                    room.images?.[0]?.url || fallbackImage
-                  }
-                  alt={room.title}
-                />
+        {loading
+          ? Array(6)
+              .fill()
+              .map((_, i) => (
+                <div className="room-card skeleton" key={i}></div>
+              ))
+          : rooms.slice(0, visibleCount).map((room) => (
+              <Link
+                to={`/room/${room._id}`}
+                key={room._id}
+                className="room-link"
+              >
+                <div className="room-card">
+                  <div className="room-image-wrapper">
+                    <img
+                      src={
+                        room.images?.[0]?.url ||
+                        fallbackImage
+                      }
+                      alt={room.title}
+                      loading="lazy"
+                    />
 
-                {/* ❤️ HEART */}
-                <div
-                  className="heart-icon"
-                  onClick={(e) => toggleLike(room._id, e)}
-                >
-                  {liked[room._id] ? (
-                    <FaHeart color="red" />
-                  ) : (
-                    <FaRegHeart />
-                  )}
+                    <div
+                      className="heart-icon"
+                      onClick={(e) =>
+                        toggleLike(room._id, e)
+                      }
+                    >
+                      {liked[room._id] ? (
+                        <FaHeart color="red" />
+                      ) : (
+                        <FaRegHeart />
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="room-content">
+                    <h3>{room.title}</h3>
+
+                    <p className="location">
+                      <MdLocationOn />{" "}
+                      {room.location?.address ||
+                        "No location"}
+                    </p>
+
+                    <p className="desc">
+                      {room.description?.slice(0, 80) ||
+                        "Well-furnished room"}
+                    </p>
+
+                    <div className="room-footer">
+                      <span className="price">
+                        ₹{room.price}{" "}
+                        <small>/month</small>
+                      </span>
+
+                      <button
+                        className="chat-btn"
+                        onClick={(e) =>
+                          handleChatClick(room, e)
+                        }
+                      >
+                        <BiChat /> Chat
+                      </button>
+                    </div>
+
+                    <p className="owner">
+                      Owner:{" "}
+                      {room.owner?.name || "Unknown"}
+                    </p>
+                  </div>
                 </div>
-              </div>
-
-              {/* CONTENT */}
-              <div className="room-content">
-                <h3>{room.title}</h3>
-
-                <p className="location">
-                  <MdLocationOn />{" "}
-                  {room.location?.address || "No location"}
-                </p>
-
-                <p className="desc">
-                  {room.description?.slice(0, 80) ||
-                    "Well-furnished room with great amenities."}
-                </p>
-
-                {/* PRICE + CHAT */}
-                <div className="room-footer">
-                  <span className="price">
-                    ₹{room.price} <small>/month</small>
-                  </span>
-
-                  <button
-                    className="chat-btn"
-                    onClick={(e) => handleChatClick(room, e)}
-                  >
-                    <BiChat /> Chat
-                  </button>
-                </div>
-
-                <p className="owner">
-                  Owner: {room.owner?.name || "Unknown"}
-                </p>
-              </div>
-            </div>
-          </Link>
-        ))}
+              </Link>
+            ))}
       </div>
+
+      {/* LOAD MORE */}
+      {!loading && visibleCount < rooms.length && (
+        <div className="load-more">
+          <button
+            onClick={() =>
+              setVisibleCount((prev) => prev + 8)
+            }
+          >
+            Load More
+          </button>
+        </div>
+      )}
     </div>
   );
 }
