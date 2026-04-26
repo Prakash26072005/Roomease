@@ -36,7 +36,6 @@
 //     try {
 //       const res = await api.get("/api/messages/conversations/my");
 
-//       // 🔥 CLEAN DATA
 //       const clean = (res.data.conversations || []).filter(
 //         (c) => c && c._id && Array.isArray(c.members)
 //       );
@@ -61,21 +60,22 @@
 //   useEffect(() => {
 //     if (!userId || !isValidObjectId(userId)) return;
 
-//     // ❌ self chat block
+//     // ❌ self chat
 //     if (user && String(user._id) === String(userId)) {
 //       setChatError("You cannot chat with yourself.");
 //       return;
 //     }
 
-//     // 🔥 SAFE FIND
+//     // 🔥 WAIT for conversations (IMPORTANT FIX)
+//     if (conversations.length === 0) return;
+
 //     const existing = conversations.find((c) =>
-//       c &&
-//       c.members &&
-//       c.members.some(
-//         (m) => m && m._id && String(m._id) === String(userId)
+//       c?.members?.some(
+//         (m) => m?._id && String(m._id) === String(userId)
 //       )
 //     );
 
+//     // ✅ existing chat open
 //     if (existing) {
 //       setChatError("");
 //       openingUserIdRef.current = "";
@@ -84,6 +84,7 @@
 //       return;
 //     }
 
+//     // ❌ prevent multiple API calls
 //     if (openingUserIdRef.current === userId) return;
 //     openingUserIdRef.current = userId;
 
@@ -91,6 +92,7 @@
 //     const openChat = async () => {
 //       try {
 //         setChatError("");
+
 //         const res = await api.post("/api/messages/conversation", {
 //           receiverId: userId,
 //         });
@@ -101,11 +103,14 @@
 //           throw new Error("Conversation was not created");
 //         }
 
-//         setConversations((prev) =>
-//           [newChat, ...prev].filter(
-//             (c) => c && c._id && c.members
-//           )
-//         );
+//         // ✅ FIX: avoid duplicate
+//         setConversations((prev) => {
+//           const exists = prev.some(
+//             (c) => String(c._id) === String(newChat._id)
+//           );
+//           if (exists) return prev;
+//           return [newChat, ...prev];
+//         });
 
 //         setCurrentChat(newChat);
 //         if (isMobile) setIsMobileChatOpen(true);
@@ -129,25 +134,24 @@
 //         const updated = [...prev];
 
 //         const index = updated.findIndex(
-//           (c) =>
-//             c &&
-//             c._id &&
-//             String(c._id) === String(msg.conversationId)
+//           (c) => String(c._id) === String(msg.conversationId)
 //         );
 
 //         if (index !== -1) {
+//           // ✅ prevent duplicate update
+//           if (updated[index].lastMessage === msg.text) return prev;
+
 //           updated[index].lastMessage = msg.text;
 
 //           const [chat] = updated.splice(index, 1);
 //           updated.unshift(chat);
 //         }
 
-//         return updated.filter(
-//           (c) => c && c._id && c.members
-//         );
+//         return updated;
 //       });
 //     };
 
+//     // ✅ KEEP BOTH (important for your backend)
 //     socket.on("receiveMessage", handleNewMessage);
 //     socket.on("messageSent", handleNewMessage);
 
@@ -157,13 +161,12 @@
 //     };
 //   }, []);
 
-
 //   // ================= DEFAULT =================
 //   useEffect(() => {
-//     if (!userId && conversations.length > 0) {
+//     if (conversations.length > 0 && !currentChat) {
 //       setCurrentChat(conversations[0]);
 //     }
-//   }, [conversations, userId]);
+//   }, [conversations]);
 
 //   return (
 //     <div className="chat-page">
@@ -192,6 +195,7 @@
 //     </div>
 //   );
 // }
+
 
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import ChatSidebar from "../pages/ChatSidebar";
@@ -251,76 +255,55 @@ export default function ChatPage() {
   }, []);
 
   // ================= OPEN CHAT =================
-  useEffect(() => {
-    if (!userId || !isValidObjectId(userId)) return;
+ useEffect(() => {
+  if (!userId || !isValidObjectId(userId)) return;
 
-    // ❌ self chat
-    if (user && String(user._id) === String(userId)) {
-      setChatError("You cannot chat with yourself.");
-      return;
-    }
+  if (user && String(user._id) === String(userId)) {
+    setChatError("You cannot chat with yourself.");
+    return;
+  }
 
-    // 🔥 WAIT for conversations (IMPORTANT FIX)
-    if (conversations.length === 0) return;
+  // 🔥 only run when conversations loaded
+  if (conversations.length === 0) return;
 
-    const existing = conversations.find((c) =>
-      c?.members?.some(
-        (m) => m?._id && String(m._id) === String(userId)
-      )
-    );
+  const existing = conversations.find((c) =>
+    c?.members?.some(
+      (m) => m?._id && String(m._id) === String(userId)
+    )
+  );
 
-    // ✅ existing chat open
-    if (existing) {
-      setChatError("");
-      openingUserIdRef.current = "";
-      setCurrentChat(existing);
+if (existing) {
+  // 🔥 IMPORTANT FIX
+  if (currentChat?._id === existing._id) return;
+
+  setCurrentChat(existing);
+  if (isMobile) setIsMobileChatOpen(true);
+  return;
+}
+
+  if (openingUserIdRef.current === userId) return;
+  openingUserIdRef.current = userId;
+
+  const openChat = async () => {
+    try {
+      const res = await api.post("/api/messages/conversation", {
+        receiverId: userId,
+      });
+
+      const newChat = res.data.conversation;
+
+      setConversations((prev) => [newChat, ...prev]);
+      setCurrentChat(newChat);
+
       if (isMobile) setIsMobileChatOpen(true);
-      return;
+    } catch (err) {
+      console.error(err);
+      openingUserIdRef.current = "";
     }
+  };
 
-    // ❌ prevent multiple API calls
-    if (openingUserIdRef.current === userId) return;
-    openingUserIdRef.current = userId;
-
-    // 🔥 CREATE NEW
-    const openChat = async () => {
-      try {
-        setChatError("");
-
-        const res = await api.post("/api/messages/conversation", {
-          receiverId: userId,
-        });
-
-        const newChat = res.data.conversation;
-
-        if (!newChat?._id || !Array.isArray(newChat.members)) {
-          throw new Error("Conversation was not created");
-        }
-
-        // ✅ FIX: avoid duplicate
-        setConversations((prev) => {
-          const exists = prev.some(
-            (c) => String(c._id) === String(newChat._id)
-          );
-          if (exists) return prev;
-          return [newChat, ...prev];
-        });
-
-        setCurrentChat(newChat);
-        if (isMobile) setIsMobileChatOpen(true);
-      } catch (err) {
-        console.error("Chat open error:", err);
-        setChatError(
-          err.response?.data?.message ||
-            "Unable to open this chat. Please try again."
-        );
-        openingUserIdRef.current = "";
-      }
-    };
-
-    openChat();
-  }, [userId, conversations, isMobile]);
-
+  openChat();
+}, [userId, conversations]); // ✅ correct balance
   // ================= SOCKET UPDATE =================
   useEffect(() => {
     const handleNewMessage = (msg) => {
@@ -357,7 +340,7 @@ export default function ChatPage() {
 
   // ================= DEFAULT =================
   useEffect(() => {
-    if (conversations.length > 0 && !currentChat) {
+    if (conversations.length > 0 && !currentChat && !userId) {
       setCurrentChat(conversations[0]);
     }
   }, [conversations]);
