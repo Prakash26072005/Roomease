@@ -273,9 +273,13 @@ export default function ChatPage() {
   );
 
 if (existing) {
-  // 🔥 IMPORTANT FIX
-  if (currentChat?._id === existing._id) return;
+  // 🔥 IMPORTANT: Don't override if already set correctly
+  if (currentChat && String(currentChat._id) === String(existing._id)) {
+    setChatError("");
+    return;
+  }
 
+  setChatError("");
   setCurrentChat(existing);
   if (isMobile) setIsMobileChatOpen(true);
   return;
@@ -303,7 +307,7 @@ if (existing) {
   };
 
   openChat();
-}, [userId, conversations]); // ✅ correct balance
+}, [userId, conversations, currentChat, isMobile, user]); // ✅ correct balance
   // ================= SOCKET UPDATE =================
   useEffect(() => {
     const handleNewMessage = (msg) => {
