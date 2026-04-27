@@ -155,19 +155,28 @@ const onSearch = (e) => {
   className={`nav-right ${showMenu ? "active" : ""}`} 
   ref={menuRef}   // ✅ ADD THIS
 >
-<button className="icon-btn" onClick={() => navigate("/favorites")}>
+<button className="icon-btn" onClick={() => {
+  navigate("/favorites");
+  setShowMenu(false);
+}}>
   <FavoriteBorderOutlinedIcon />
   <span className="icon-text">Favorites</span>
 </button>
 
-<button className="icon-btn" onClick={handleChatClick}>
+<button className="icon-btn" onClick={() => {
+  handleChatClick();
+  setShowMenu(false);
+}}>
   <i className="ri-chat-3-line"></i>
   <span className="icon-text">Chat</span>
 </button>
 
 <button
   className="icon-btn"
-  onClick={() => navigate("/my-bookings")}
+  onClick={() => {
+    navigate("/my-bookings");
+    setShowMenu(false);
+  }}
 >
   <CottageOutlinedIcon />
   <span className="icon-text">Bookings</span>
@@ -203,6 +212,7 @@ const onSearch = (e) => {
       className="dropdown-item"
       onClick={() => {
         setShowProfile(false);
+        setShowMenu(false);
         navigate("/add");
       }}
     >
@@ -215,6 +225,7 @@ const onSearch = (e) => {
       className="dropdown-item"
       onClick={() => {
         setShowProfile(false);
+        setShowMenu(false);
         navigate("/my-rooms");
       }}
     >
@@ -230,13 +241,19 @@ const onSearch = (e) => {
 
         {/* ================= LOGIN / LOGOUT ================= */}
         {user ? (
-  <button className="login-btn" onClick={handleLogout}>
+  <button className="login-btn" onClick={() => {
+    handleLogout();
+    setShowMenu(false);
+  }}>
     Logout
   </button>
 ) : (
   <button
     className="login-btn"
-    onClick={() => navigate("/login")}
+    onClick={() => {
+      navigate("/login");
+      setShowMenu(false);
+    }}
   >
     Login
   </button>
