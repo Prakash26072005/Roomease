@@ -238,9 +238,10 @@ export default function ChatPage() {
         (c) => c && c._id && Array.isArray(c.members)
       );
 
+      console.log("✅ Conversations fetched:", clean);
       setConversations(clean);
     } catch (err) {
-      console.error(err);
+      console.error("❌ Error fetching conversations:", err);
     }
   }, []);
 
@@ -257,7 +258,12 @@ export default function ChatPage() {
   // ================= OPEN CHAT FROM URL =================
   useEffect(() => {
     // Only handle direct URL access with userId parameter
-    if (!userId || !isValidObjectId(userId)) return;
+    if (!userId || !isValidObjectId(userId)) {
+      console.log("⏭️  No valid userId in URL:", userId);
+      return;
+    }
+
+    console.log("🔍 Opening chat from URL with userId:", userId);
 
     if (user && String(user._id) === String(userId)) {
       setChatError("You cannot chat with yourself.");
@@ -265,7 +271,12 @@ export default function ChatPage() {
     }
 
     // Wait for conversations to load
-    if (conversations.length === 0) return;
+    if (conversations.length === 0) {
+      console.log("⏳ Waiting for conversations to load...");
+      return;
+    }
+
+    console.log("📋 Searching in conversations:", conversations.length);
 
     const existing = conversations.find((c) =>
       c?.members?.some(
@@ -274,6 +285,7 @@ export default function ChatPage() {
     );
 
     if (existing) {
+      console.log("✅ Found existing chat:", existing);
       setChatError("");
       setCurrentChat(existing);
       if (isMobile) setIsMobileChatOpen(true);
@@ -281,23 +293,28 @@ export default function ChatPage() {
     }
 
     // Prevent duplicate API calls
-    if (openingUserIdRef.current === userId) return;
+    if (openingUserIdRef.current === userId) {
+      console.log("⏭️  Already opening this chat, skipping...");
+      return;
+    }
     openingUserIdRef.current = userId;
 
     // Create new conversation
     const openChat = async () => {
       try {
+        console.log("➕ Creating new conversation with userId:", userId);
         const res = await api.post("/api/messages/conversation", {
           receiverId: userId,
         });
 
         const newChat = res.data.conversation;
+        console.log("✅ New conversation created:", newChat);
         setConversations((prev) => [newChat, ...prev]);
         setCurrentChat(newChat);
 
         if (isMobile) setIsMobileChatOpen(true);
       } catch (err) {
-        console.error(err);
+        console.error("❌ Error creating conversation:", err);
         setChatError(
           err.response?.data?.message || "Unable to open this chat."
         );

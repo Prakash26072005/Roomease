@@ -101,44 +101,56 @@ export default function ChatSidebar({
 
       {/* LIST */}
       <div className="chat-list">
-        {conversations?.map((c) => {
-          
-          // 🔥 FULL SAFETY
-          if (!c || !c.members) return null;
+        {!conversations || conversations.length === 0 ? (
+          <p style={{ padding: "20px", textAlign: "center", color: "#999" }}>
+            No conversations yet
+          </p>
+        ) : (
+          conversations.map((c) => {
+            
+            // 🔥 FULL SAFETY
+            if (!c || !c.members) return null;
 
-          const otherUser = c.members.find(
-            (m) =>
-              m &&
-              m._id &&
-              user &&
-              m._id.toString() !== user._id?.toString()
-          );
+            const otherUser = c.members.find(
+              (m) =>
+                m &&
+                m._id &&
+                user &&
+                m._id.toString() !== user._id?.toString()
+            );
 
-          return (
-            <div
-              key={c._id}
-              className={`chat-item ${
-                currentChat?._id === c._id ? "active" : ""
-              }`}
-              onClick={() => {
-                if (!otherUser?._id) return;
-                setCurrentChat(c);
-                navigate(`/chatpage/${otherUser._id}`, { replace: true });
-              }}
-            >
-              {/* AVATAR */}
-              <div className="avatar">
-                {otherUser?.name?.charAt(0)?.toUpperCase() || "U"}
+            if (!otherUser) {
+              console.warn("⚠️ No other user found in conversation:", c);
+              return null;
+            }
+
+            return (
+              <div
+                key={c._id}
+                className={`chat-item ${
+                  currentChat?._id === c._id ? "active" : ""
+                }`}
+                onClick={() => {
+                  console.log("📞 Clicking chat with:", otherUser.name);
+                  if (!otherUser?._id) return;
+                  setCurrentChat(c);
+                  navigate(`/chatpage/${otherUser._id}`, { replace: true });
+                }}
+              >
+                {/* AVATAR */}
+                <div className="avatar">
+                  {otherUser?.name?.charAt(0)?.toUpperCase() || "U"}
+                </div>
+
+                {/* INFO */}
+                <div className="chat-info">
+                  <h4>{otherUser?.name || "User"}</h4>
+                  <p>{c.lastMessage || "No messages yet"}</p>
+                </div>
               </div>
-
-              {/* INFO */}
-              <div className="chat-info">
-                <h4>{otherUser?.name || "User"}</h4>
-                <p>{c.lastMessage || "No messages yet"}</p>
-              </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
     </div>
   );
