@@ -253,6 +253,14 @@ export default function RoomsPage() {
     }
   };
 
+  // ================= AUTH CHECK =================
+  useEffect(() => {
+    const user = getLoggedInUser();
+    if (!user?._id) {
+      navigate("/login");
+    }
+  }, [navigate]);
+
   // ================= FETCH DATA =================
   useEffect(() => {
     const fetchData = async () => {
