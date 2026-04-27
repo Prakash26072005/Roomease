@@ -253,14 +253,6 @@ export default function RoomsPage() {
     }
   };
 
-  // ================= AUTH CHECK =================
-  useEffect(() => {
-    const user = getLoggedInUser();
-    if (!user?._id) {
-      navigate("/login");
-    }
-  }, [navigate]);
-
   // ================= FETCH DATA =================
   useEffect(() => {
     const fetchData = async () => {
@@ -269,7 +261,9 @@ export default function RoomsPage() {
       try {
         const [roomsRes, favRes] = await Promise.all([
           api.get(`/api/rooms/all?location=${location}`),
-          api.get("/api/favorites/favorites"),
+          api
+            .get("/api/favorites/favorites")
+            .catch(() => ({ data: { success: false, rooms: [] } })), // graceful fail
         ]);
 
         if (roomsRes.data.success) {
