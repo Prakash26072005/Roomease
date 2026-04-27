@@ -123,6 +123,7 @@ export default function ChatSidebar({
               onClick={() => {
                 if (!otherUser?._id) return;
                 setCurrentChat(c);
+                navigate(`/chatpage/${otherUser._id}`, { replace: true });
               }}
             >
               {/* AVATAR */}
