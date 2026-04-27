@@ -254,54 +254,59 @@ export default function ChatPage() {
     socket.emit("join", user._id);
   }, []);
 
-  // ================= OPEN CHAT =================
- useEffect(() => {
-  if (!userId || !isValidObjectId(userId)) return;
+  // ================= OPEN CHAT FROM URL =================
+  useEffect(() => {
+    // Only handle direct URL access with userId parameter
+    if (!userId || !isValidObjectId(userId)) return;
 
-  if (user && String(user._id) === String(userId)) {
-    setChatError("You cannot chat with yourself.");
-    return;
-  }
-
-  // 🔥 only run when conversations loaded
-  if (conversations.length === 0) return;
-
-  const existing = conversations.find((c) =>
-    c?.members?.some(
-      (m) => m?._id && String(m._id) === String(userId)
-    )
-  );
-
-  if (existing) {
-    setChatError("");
-    setCurrentChat(existing);
-    if (isMobile) setIsMobileChatOpen(true);
-    return;
-  }
-
-  if (openingUserIdRef.current === userId) return;
-  openingUserIdRef.current = userId;
-
-  const openChat = async () => {
-    try {
-      const res = await api.post("/api/messages/conversation", {
-        receiverId: userId,
-      });
-
-      const newChat = res.data.conversation;
-
-      setConversations((prev) => [newChat, ...prev]);
-      setCurrentChat(newChat);
-
-      if (isMobile) setIsMobileChatOpen(true);
-    } catch (err) {
-      console.error(err);
-      openingUserIdRef.current = "";
+    if (user && String(user._id) === String(userId)) {
+      setChatError("You cannot chat with yourself.");
+      return;
     }
-  };
 
-  openChat();
-}, [userId, conversations, isMobile, user]);
+    // Wait for conversations to load
+    if (conversations.length === 0) return;
+
+    const existing = conversations.find((c) =>
+      c?.members?.some(
+        (m) => m?._id && String(m._id) === String(userId)
+      )
+    );
+
+    if (existing) {
+      setChatError("");
+      setCurrentChat(existing);
+      if (isMobile) setIsMobileChatOpen(true);
+      return;
+    }
+
+    // Prevent duplicate API calls
+    if (openingUserIdRef.current === userId) return;
+    openingUserIdRef.current = userId;
+
+    // Create new conversation
+    const openChat = async () => {
+      try {
+        const res = await api.post("/api/messages/conversation", {
+          receiverId: userId,
+        });
+
+        const newChat = res.data.conversation;
+        setConversations((prev) => [newChat, ...prev]);
+        setCurrentChat(newChat);
+
+        if (isMobile) setIsMobileChatOpen(true);
+      } catch (err) {
+        console.error(err);
+        setChatError(
+          err.response?.data?.message || "Unable to open this chat."
+        );
+        openingUserIdRef.current = "";
+      }
+    };
+
+    openChat();
+  }, [userId, conversations, isMobile, user]);
   // ================= SOCKET UPDATE =================
   useEffect(() => {
     const handleNewMessage = (msg) => {
