@@ -39,18 +39,18 @@ router.post("/conversation", verifyToken, async (req, res) => {
 
     let convo = await findConversationByMembers(members, membersKey).populate(
       "members",
-      "name"
+      "name _id"
     );
 
     if (!convo) {
       try {
         convo = await Conversation.create({ members, membersKey });
-        convo = await convo.populate("members", "name");
+        convo = await convo.populate("members", "name _id");
       } catch (err) {
         if (err.code === 11000) {
           convo = await findConversationByMembers(members, membersKey).populate(
             "members",
-            "name"
+            "name _id"
           );
         } else {
           throw err;
@@ -64,12 +64,18 @@ router.post("/conversation", verifyToken, async (req, res) => {
         .json({ success: false, message: "Conversation could not be created" });
     }
 
+    console.log("✅ Conversation created/found:", {
+      id: convo._id,
+      membersCount: convo.members?.length,
+      members: convo.members
+    });
+
     res.json({ success: true, conversation: convo });
   } catch (err) {
-    console.error("CONVERSATION ERROR FULL:", err);
+    console.error("❌ CONVERSATION ERROR:", err.message);
     res.status(500).json({
       success: false,
-      error: err.message,
+      message: err.message,
     });
   }
 });
@@ -130,12 +136,13 @@ router.get("/conversations/my", verifyToken, async (req, res) => {
     const conversations = await Conversation.find({
       members: req.user._id,
     })
-      .populate("members", "name")
+      .populate("members", "name _id")
       .sort({ updatedAt: -1 });
 
+    console.log("✅ Fetched conversations:", conversations.length);
     res.json({ success: true, conversations });
   } catch (err) {
-    console.error("GET CONVERSATIONS ERROR:", err);
+    console.error("❌ GET CONVERSATIONS ERROR:", err);
     res.status(500).json({ success: false });
   }
 });

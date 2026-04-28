@@ -270,23 +270,21 @@ export default function ChatPage() {
       return;
     }
 
-    // Wait for conversations to load
-    if (conversations.length === 0) {
-      console.log("⏳ Waiting for conversations to load...");
-      return;
-    }
-
     console.log("📋 Searching in conversations:", conversations.length);
 
-    const existing = conversations.find((c) => {
-      if (!c?.members || c.members.length === 0) return false;
-      
-      // Support both object references and ID strings
-      return c.members.some((m) => {
-        const memberId = m?._id || m;
-        return String(memberId) === String(userId);
+    // 🔥 Check for existing conversation (only if conversations are loaded)
+    let existing = null;
+    if (conversations.length > 0) {
+      existing = conversations.find((c) => {
+        if (!c?.members || c.members.length === 0) return false;
+        
+        // Support both object references and ID strings
+        return c.members.some((m) => {
+          const memberId = m?._id || m;
+          return String(memberId) === String(userId);
+        });
       });
-    });
+    }
 
     if (existing) {
       console.log("✅ Found existing chat:", existing);
@@ -296,12 +294,14 @@ export default function ChatPage() {
       return;
     }
 
-    // Prevent duplicate API calls
+    // Prevent duplicate API calls (MUST allow first-time creation)
     if (openingUserIdRef.current === userId) {
       console.log("⏭️  Already opening this chat, skipping...");
       return;
     }
     openingUserIdRef.current = userId;
+    
+    console.log("📭 No existing conversation found, creating new one...");
 
     // Create new conversation
     const openChat = async () => {
