@@ -278,11 +278,15 @@ export default function ChatPage() {
 
     console.log("📋 Searching in conversations:", conversations.length);
 
-    const existing = conversations.find((c) =>
-      c?.members?.some(
-        (m) => m?._id && String(m._id) === String(userId)
-      )
-    );
+    const existing = conversations.find((c) => {
+      if (!c?.members || c.members.length === 0) return false;
+      
+      // Support both object references and ID strings
+      return c.members.some((m) => {
+        const memberId = m?._id || m;
+        return String(memberId) === String(userId);
+      });
+    });
 
     if (existing) {
       console.log("✅ Found existing chat:", existing);
@@ -309,6 +313,15 @@ export default function ChatPage() {
 
         const newChat = res.data.conversation;
         console.log("✅ New conversation created:", newChat);
+        
+        // Ensure members are properly formatted
+        if (!newChat?.members || newChat.members.length === 0) {
+          console.error("❌ Invalid conversation structure:", newChat);
+          setChatError("Failed to create conversation. Please try again.");
+          openingUserIdRef.current = "";
+          return;
+        }
+
         setConversations((prev) => [newChat, ...prev]);
         setCurrentChat(newChat);
 

@@ -128,11 +128,14 @@ export default function ChatSidebar({
               <div
                 key={c._id}
                 className={`chat-item ${
-                  currentChat?._id === c._id ? "active" : ""
+                  currentChat?._id?.toString() === c._id?.toString() ? "active" : ""
                 }`}
                 onClick={() => {
-                  console.log("📞 Clicking chat with:", otherUser.name);
-                  if (!otherUser?._id) return;
+                  console.log("📞 Clicking chat with:", otherUser.name, "ID:", otherUser._id);
+                  if (!otherUser?._id) {
+                    console.error("❌ No other user ID found");
+                    return;
+                  }
                   setCurrentChat(c);
                   navigate(`/chatpage/${otherUser._id}`, { replace: true });
                 }}
