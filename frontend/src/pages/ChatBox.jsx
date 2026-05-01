@@ -121,12 +121,12 @@ export default function ChatBox({ currentChat, user, setIsMobileChatOpen }) {
     <div className="chatbox">
       {/* HEADER */}
       <div className="chat-header">
-        <button
+        {/* <button
           className="back-btn"
           onClick={() => setIsMobileChatOpen(false)}
         >
           ←
-        </button>
+        </button> */}
 
         <div className="chat-user">
           <div className="chat-avatar">
